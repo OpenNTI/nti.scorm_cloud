@@ -9,15 +9,17 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import re
+import six
 import uuid
 import urllib
 import urllib2
-import logging
 import datetime
 from hashlib import md5
 from xml.dom import minidom
 
-
+logger = __import__('logging').getLogger(__name__)
+                                         
+                                         
 def make_utf8(dictionary):
     """
     Encodes all Unicode strings in the dictionary to UTF-8. Converts
@@ -28,7 +30,7 @@ def make_utf8(dictionary):
 
     result = {}
     for (key, value) in dictionary.iteritems():
-        if isinstance(value, unicode):
+        if isinstance(value, six.text_type):
             value = value.encode('utf-8')
         else:
             value = str(value)
@@ -41,8 +43,8 @@ class Configuration(object):
     Stores the configuration elements required by the API.
     """
 
-    def __init__(self, appid, secret,
-                 serviceurl, origin='rusticisoftware.pythonlibrary.2.0.0'):
+    def __init__(self, appid, secret, serviceurl,
+                 origin='rusticisoftware.pythonlibrary.2.0.0'):
         self.appid = appid
         self.secret = secret
         self.origin = origin
@@ -157,7 +159,7 @@ class DebugService(object):
         try:
             xmldoc = self.service.make_call('rustici.debug.ping')
             return xmldoc.documentElement.attributes['stat'].value == 'ok'
-        except Exception, ex:
+        except Exception:
             return False
 
     def authping(self):
@@ -168,7 +170,7 @@ class DebugService(object):
         try:
             xmldoc = self.service.make_call('rustici.debug.authPing')
             return xmldoc.documentElement.attributes['stat'].value == 'ok'
-        except Exception, ex:
+        except Exception:
             return False
 
 
@@ -185,14 +187,15 @@ class UploadService(object):
         Retrieves an upload token which must be used to successfully upload a
         file.
         """
+        server = None
         xmldoc = self.service.make_call('rustici.upload.getUploadToken')
         serverNodes = xmldoc.getElementsByTagName('server')
-        tokenidNodes = xmldoc.getElementsByTagName('id')
-        server = None
-        for s in serverNodes:
+        for s in serverNodes or ():
             server = s.childNodes[0].nodeValue
+
         tokenid = None
-        for t in tokenidNodes:
+        tokenidNodes = xmldoc.getElementsByTagName('id')
+        for t in tokenidNodes or ():
             tokenid = t.childNodes[0].nodeValue
         if server and tokenid:
             token = UploadToken(server, tokenid)
@@ -310,7 +313,7 @@ class CourseService(object):
         if stylesheeturl is not None:
             request.parameters['stylesheet'] = stylesheeturl
         url = request.construct_url('rustici.course.preview')
-        logging.info('preview link: ' + url)
+        logger.info('preview link: ' + url)
         return url
 
     def get_metadata(self, courseid):
@@ -346,7 +349,7 @@ class CourseService(object):
             request.parameters['notificationframesrc'] = notificationFrameUrl
 
         url = request.construct_url('rustici.course.properties')
-        logging.info('properties link: ' + url)
+        logger.info('properties link: ' + url)
         return url
 
     def get_attributes(self, courseid):
@@ -361,8 +364,8 @@ class CourseService(object):
         request.parameters['courseid'] = courseid
         xmldoc = request.call_service('rustici.course.getAttributes')
 
-        attrNodes = xmldoc.getElementsByTagName('attribute')
         atts = {}
+        attrNodes = xmldoc.getElementsByTagName('attribute')
         for an in attrNodes:
             atts[an.attributes['name'].value] = an.attributes['value'].value
         return atts
@@ -428,8 +431,7 @@ class RegistrationService(object):
             request.parameters['courseTags'] = courseTags
         if registrationTags is not None:
             request.parameters['registrationTags'] = registrationTags
-        xmldoc = request.call_service(
-            'rustici.registration.createRegistration')
+        xmldoc = request.call_service('rustici.registration.createRegistration')
         successNodes = xmldoc.getElementsByTagName('success')
         if successNodes.length == 0:
             raise ScormCloudError("Create Registration failed.  " +
@@ -485,8 +487,7 @@ class RegistrationService(object):
         if courseIdFilterRegex is not None:
             request.parameters['coursefilter'] = courseIdFilterRegex
 
-        result = request.call_service(
-            'rustici.registration.getRegistrationList')
+        result = request.call_service('rustici.registration.getRegistrationList')
         regs = RegistrationData.list_from_result(result)
         return regs
 
@@ -502,8 +503,7 @@ class RegistrationService(object):
         request = self.service.request()
         request.parameters['regid'] = regid
         request.parameters['resultsformat'] = resultsformat
-        return request.call_service(
-            'rustici.registration.getRegistrationResult')
+        return request.call_service('rustici.registration.getRegistrationResult')
 
     def get_launch_history(self, regid):
         """
@@ -539,8 +539,7 @@ class RegistrationService(object):
         """
         request = self.service.request()
         request.parameters['regid'] = regid
-        return request.call_service(
-            'rustici.registration.resetGlobalObjectives')
+        return request.call_service('rustici.registration.resetGlobalObjectives')
 
     def delete_registration(self, regid):
         """
@@ -559,8 +558,10 @@ class InvitationService(object):
     def __init__(self, service):
         self.service = service
 
-    def create_invitation(self, courseid, publicInvitation='true', send='true', addresses=None, emailSubject=None, emailBody=None, creatingUserEmail=None,
-                          registrationCap=None, postbackUrl=None, authType=None, urlName=None, urlPass=None, resultsFormat=None, async=False):
+    def create_invitation(self, courseid, publicInvitation='true', send='true', addresses=None, 
+                          emailSubject=None, emailBody=None, creatingUserEmail=None,
+                          registrationCap=None, postbackUrl=None, authType=None, urlName=None, 
+                          urlPass=None, resultsFormat=None, async=False):
         request = self.service.request()
 
         request.parameters['courseid'] = courseid
@@ -596,10 +597,10 @@ class InvitationService(object):
 
         return data
 
-    def get_invitation_list(self, filter=None, coursefilter=None):
+    def get_invitation_list(self, filter_=None, coursefilter=None):
         request = self.service.request()
-        if filter is not None:
-            request.parameters['filter'] = filter
+        if filter_ is not None:
+            request.parameters['filter'] = filter_
         if coursefilter is not None:
             request.parameters['coursefilter'] = coursefilter
         data = request.call_service('rustici.invitation.getInvitationList')
@@ -619,12 +620,12 @@ class InvitationService(object):
         data = request.call_service('rustici.invitation.getInvitationInfo')
         return data
 
-    def change_status(self, invitationId, enable, open=None):
+    def change_status(self, invitationId, enable, open_=None):
         request = self.service.request()
         request.parameters['invitationId'] = invitationId
         request.parameters['enable'] = enable
-        if open is not None:
-            request.parameters['open'] = open
+        if open_ is not None:
+            request.parameters['open'] = open_
         data = request.call_service('rustici.invitation.changeStatus')
         return data
 
@@ -751,7 +752,8 @@ class ReportingService(object):
             'learnerCourseComments': 'DetailsWidget.php?drt='
             'learnerCourseComments',
             'allLearners': 'ViewAllDetailsWidget.php?viewall=learners',
-            'allCourses': 'ViewAllDetailsWidget.php?viewall=courses'}
+            'allCourses': 'ViewAllDetailsWidget.php?viewall=courses'
+        }
         reportUrl += widgetUrlTypeLib[widgettype]
         reportUrl += '&appId=' + self.service.config.appid
         reportUrl += widgetSettings.get_url_encoding()
@@ -760,6 +762,7 @@ class ReportingService(object):
 
 
 class WidgetSettings(object):
+
     def __init__(self, dateRangeSettings, tagSettings):
         self.dateRangeSettings = dateRangeSettings
         self.tagSettings = tagSettings
@@ -867,15 +870,14 @@ class ScormCloudError(Exception):
 
 
 class ImportResult(object):
-    wasSuccessful = False
     title = ""
     message = ""
     parserWarnings = []
+    wasSuccessful = False
 
     def __init__(self, importResultElement):
         if importResultElement is not None:
-            self.wasSuccessful = (importResultElement.attributes['successful']
-                                  .value == 'true')
+            self.wasSuccessful = (importResultElement.attributes['successful'].value == 'true')
             self.title = (importResultElement.getElementsByTagName("title")[0]
                           .childNodes[0].nodeValue)
             self.message = (importResultElement
@@ -902,19 +904,18 @@ class ImportResult(object):
 
 
 class CourseData(object):
+    title = ""
     courseId = ""
     numberOfVersions = 1
     numberOfRegistrations = 0
-    title = ""
 
     def __init__(self, courseDataElement):
         if courseDataElement is not None:
-            self.courseId = courseDataElement.attributes['id'].value
-            self.numberOfVersions = (courseDataElement.attributes['versions']
-                                     .value)
-            self.numberOfRegistrations = (courseDataElement
-                                          .attributes['registrations'].value)
-            self.title = courseDataElement.attributes['title'].value
+            attributes = courseDataElement.attributes
+            self.courseId = attributes['id'].value
+            self.title = attributes['title'].value
+            self.numberOfVersions = attributes['versions'].value
+            self.numberOfRegistrations = attributes['registrations'].value
 
     @classmethod
     def list_from_result(cls, xmldoc):
@@ -933,6 +934,7 @@ class CourseData(object):
 
 
 class UploadToken(object):
+
     server = ""
     tokenid = ""
 
@@ -1010,17 +1012,18 @@ class ServiceRequest(object):
         """
         params = {'method': method}
 
-        #          'appid': self.service.config.appid,
-        #          'origin': self.service.config.origin,
-        #          'ts': datetime.datetime.utcnow().strftime('yyyyMMddHHmmss'),
-        #          'applib': 'python'}
+        # 'appid': self.service.config.appid,
+        # 'origin': self.service.config.origin,
+        # 'ts': datetime.datetime.utcnow().strftime('yyyyMMddHHmmss'),
+        # 'applib': 'python'}
         for k, v in self.parameters.iteritems():
             params[k] = v
         url = self.service.config.serviceurl
         if serviceurl is not None:
             url = serviceurl
-        url = (ScormCloudUtilities.clean_cloud_host_url(url) + '?' +
-               self._encode_and_sign(params))
+        url = (
+            ScormCloudUtilities.clean_cloud_host_url(url) + '?' + self._encode_and_sign(params)
+        )
         return url
 
     def get_xml(self, raw):
