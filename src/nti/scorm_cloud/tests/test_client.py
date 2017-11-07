@@ -12,18 +12,31 @@ from hamcrest import is_
 from hamcrest import assert_that
 from hamcrest import has_entries
 
+from nti.testing.matchers import validly_provides
+from nti.testing.matchers import verifiably_provides
+
 import six
 import unittest
 
 from nti.scorm_cloud.tests import SharedConfiguringTestLayer
 
 from nti.scorm_cloud.client import make_utf8
+from nti.scorm_cloud.client import Configuration
+from nti.scorm_cloud.client import ScormCloudService
+
+from nti.scorm_cloud.interfaces import IScormCloudService
 
 
 class TestClient(unittest.TestCase):
 
     layer = SharedConfiguringTestLayer
 
+    def test_verify(self):
+        config = Configuration("appid", "secret", "http://example.org")
+        service = ScormCloudService.withconfig(config)
+        assert_that(service, validly_provides(IScormCloudService))
+        assert_that(service, verifiably_provides(IScormCloudService))
+        
     def test_make_utf8(self):
         data = {
             'Bleach': u'Ichigo',
