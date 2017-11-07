@@ -22,8 +22,6 @@ try:
 except ImportError:
     from urllib.request import urlopen
 
-from nti.scorm_cloud._compat import native_
-
 logger = __import__('logging').getLogger(__name__)
                                          
                                          
@@ -34,11 +32,10 @@ def make_utf8(dictionary):
 
     Returns a copy of the dictionary, doesn't touch the original.
     """
-
     result = {}
-    for (key, value) in dictionary.iteritems():
+    for key, value in dictionary.items():
         if isinstance(value, text_type):
-            value = native_(value, 'utf-8')
+            value = value.encode('utf-8')
         else:
             value = str(value)
         result[key] = value
