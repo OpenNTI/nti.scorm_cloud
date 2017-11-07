@@ -22,6 +22,10 @@ try:
 except ImportError:
     from urllib.request import urlopen
 
+from zope import interface
+
+from nti.scorm_cloud.interfaces import IScormCloudService
+
 logger = __import__('logging').getLogger(__name__)
                                          
                                          
@@ -58,6 +62,7 @@ class Configuration(object):
         return 'Configuration for AppID %s from origin %s' % (self.appid, self.origin)
 
 
+@interface.implementer(IScormCloudService)
 class ScormCloudService(object):
     """
     Primary cloud service object that provides access to the more specific
@@ -98,39 +103,21 @@ class ScormCloudService(object):
         return cls(Configuration(appid, secret, serviceurl, origin))
 
     def get_course_service(self):
-        """
-        Retrieves the CourseService.
-        """
         return CourseService(self)
 
     def get_debug_service(self):
-        """
-        Retrieves the DebugService.
-        """
         return DebugService(self)
 
     def get_registration_service(self):
-        """
-        Retrieves the RegistrationService.
-        """
         return RegistrationService(self)
 
     def get_invitation_service(self):
-        """
-        Retrieves the InvitationService.
-        """
         return InvitationService(self)
 
     def get_reporting_service(self):
-        """
-        Retrieves the ReportingService.
-        """
         return ReportingService(self)
 
     def get_upload_service(self):
-        """
-        Retrieves the UploadService.
-        """
         return UploadService(self)
 
     def request(self):
