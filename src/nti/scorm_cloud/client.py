@@ -9,17 +9,20 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import re
-import six
 import uuid
-import urllib
 import datetime
 from hashlib import md5
 from xml.dom import minidom
+
+from six import text_type
+from six.moves.urllib_parse import quote_plus
 
 try:
     from urllib2 import urlopen
 except ImportError:
     from urllib.request import urlopen
+
+from nti.scorm_cloud._compat import native_
 
 logger = __import__('logging').getLogger(__name__)
                                          
@@ -34,8 +37,8 @@ def make_utf8(dictionary):
 
     result = {}
     for (key, value) in dictionary.iteritems():
-        if isinstance(value, six.text_type):
-            value = value.encode('utf-8')
+        if isinstance(value, text_type):
+            value = native_(value, 'utf-8')
         else:
             value = str(value)
         result[key] = value
@@ -1073,7 +1076,7 @@ class ServiceRequest(object):
         secret = self.service.config.secret
         for key in sorted(dictionary.keys(), key=str.lower):
             signing += key + dictionary[key]
-            values.append(key + '=' + urllib.quote_plus(dictionary[key]))
+            values.append(key + '=' + quote_plus(dictionary[key]))
         values.append('sig=' + md5(secret + signing).hexdigest())
         return '&'.join(values)
 
