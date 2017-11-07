@@ -12,10 +12,14 @@ import re
 import six
 import uuid
 import urllib
-import urllib2
 import datetime
 from hashlib import md5
 from xml.dom import minidom
+
+try:
+    from urllib2 import urlopen
+except ImportError:
+    from urllib.request import urlopen
 
 logger = __import__('logging').getLogger(__name__)
                                          
@@ -642,10 +646,12 @@ class ReportingService(object):
         """
         Gets the date/time, according to Reportage.
         """
-        reportUrl = (self._get_reportage_service_url() +
-                     'Reportage/scormreports/api/getReportDate.php?appId=' +
-                     self.service.config.appid)
-        cloudsocket = urllib2.urlopen(reportUrl, None)
+        reportUrl = (
+            self._get_reportage_service_url() +
+            'Reportage/scormreports/api/getReportDate.php?appId=' +
+            self.service.config.appid
+        )
+        cloudsocket = urlopen(reportUrl, None)
         reply = cloudsocket.read()
         cloudsocket.close()
         d = datetime.datetime
@@ -1044,7 +1050,7 @@ class ServiceRequest(object):
         return xmldoc
 
     def send_post(self, url, postparams):
-        cloudsocket = urllib2.urlopen(url, postparams)
+        cloudsocket = urlopen(url, postparams)
         reply = cloudsocket.read()
         cloudsocket.close()
         return reply
