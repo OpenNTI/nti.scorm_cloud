@@ -19,11 +19,12 @@ from six.moves.urllib_parse import quote_plus
 
 try:
     from urllib2 import urlopen
-except ImportError:
+except ImportError:  # pragma: no cover
     from urllib.request import urlopen
 
 from zope import interface
 
+from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IScormCloudService
 
 logger = __import__('logging').getLogger(__name__)
@@ -86,7 +87,8 @@ class ScormCloudService(object):
         return cls(config)
 
     @classmethod
-    def withargs(cls, appid, secret, serviceurl, origin):
+    def withargs(cls, appid, secret, serviceurl, 
+                 origin='rusticisoftware.pythonlibrary.2.0.0'):
         """
         Named constructor that creates a ScormCloudService with the specified
         configuration values.
@@ -218,6 +220,7 @@ class UploadService(object):
         return request.call_service('rustici.upload.deleteFiles')
 
 
+@interface.implementer(ICourseService)
 class CourseService(object):
     """
     Service that provides methods to manage and interact with courses on the
