@@ -23,6 +23,7 @@ from nti.scorm_cloud.tests import SharedConfiguringTestLayer
 from nti.scorm_cloud.client import make_utf8
 from nti.scorm_cloud.client import Configuration
 from nti.scorm_cloud.client import ScormCloudService
+from nti.scorm_cloud.client import ScormCloudUtilities
 
 from nti.scorm_cloud.interfaces import IScormCloudService
 
@@ -36,7 +37,19 @@ class TestClient(unittest.TestCase):
         service = ScormCloudService.withconfig(config)
         assert_that(service, validly_provides(IScormCloudService))
         assert_that(service, verifiably_provides(IScormCloudService))
-        
+
+    def test_scorm_cloud_utilities(self):
+        s = ScormCloudUtilities.get_canonical_origin_string("NextThought&", "Dataserver*",
+                                                            "2.0^")
+        assert_that(s, is_('nextthought.dataserver.2.0'))
+
+        url = 'http://scorm.nextthought.com'
+        url = ScormCloudUtilities.clean_cloud_host_url(url)
+        assert_that(url, 'http://scorm.nextthought.com/api')
+
+        assert_that(ScormCloudUtilities.clean_cloud_host_url('http://scorm.nti.com/api'),
+                    is_('http://scorm.nti.com/api'))
+
     def test_make_utf8(self):
         data = {
             'Bleach': u'Ichigo',
