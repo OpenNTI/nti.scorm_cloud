@@ -13,6 +13,7 @@ from hamcrest import none
 from hamcrest import is_not
 from hamcrest import assert_that
 from hamcrest import has_entries
+from hamcrest import instance_of
 
 from nti.testing.matchers import validly_provides
 from nti.testing.matchers import verifiably_provides
@@ -70,5 +71,6 @@ class TestClient(unittest.TestCase):
             'Bankai': object(),
         }
         assert_that(make_utf8(data),
-                    has_entries('Bleach', b'Ichigo',
-                                'Shikai', is_(six.binary_type)))
+                    has_entries('Bleach', 'Ichigo',
+                                'Shikai', is_(instance_of(six.string_types)),
+                                'Bankai', is_(instance_of(six.string_types))))

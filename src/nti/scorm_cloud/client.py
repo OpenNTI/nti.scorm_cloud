@@ -24,6 +24,8 @@ except ImportError:  # pragma: no cover
 
 from zope import interface
 
+from nti.scorm_cloud.compat import native_ 
+
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IScormCloudService
 
@@ -40,7 +42,7 @@ def make_utf8(dictionary):
     result = {}
     for key, value in dictionary.items():
         if isinstance(value, text_type):
-            value = value.encode('utf-8')
+            value = native_(value, 'utf-8')
         else:
             value = str(value)
         result[key] = value
