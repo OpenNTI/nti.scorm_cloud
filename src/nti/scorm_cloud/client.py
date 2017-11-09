@@ -26,6 +26,7 @@ from zope import interface
 
 from nti.scorm_cloud.compat import native_ 
 
+from nti.scorm_cloud.interfaces import IDebugService
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IScormCloudService
 
@@ -67,10 +68,6 @@ class Configuration(object):
 
 @interface.implementer(IScormCloudService)
 class ScormCloudService(object):
-    """
-    Primary cloud service object that provides access to the more specific
-    service areas, like the RegistrationService.
-    """
 
     def __init__(self, configuration):
         self.config = configuration
@@ -138,19 +135,13 @@ class ScormCloudService(object):
         return self.request().call_service(method)
 
 
+@interface.implementer(IDebugService)
 class DebugService(object):
-    """
-    Debugging and testing service that allows you to check the status of the
-    SCORM Cloud and test your configuration settings.
-    """
 
     def __init__(self, service):
         self.service = service
 
     def ping(self):
-        """
-        A simple ping that checks the connection to the SCORM Cloud.
-        """
         try:
             xmldoc = self.service.make_call('rustici.debug.ping')
             return xmldoc.documentElement.attributes['stat'].value == 'ok'
@@ -158,10 +149,6 @@ class DebugService(object):
             return False
 
     def authping(self):
-        """
-        An authenticated ping that checks the connection to the SCORM Cloud
-        and verifies the configured credentials.
-        """
         try:
             xmldoc = self.service.make_call('rustici.debug.authPing')
             return xmldoc.documentElement.attributes['stat'].value == 'ok'
@@ -224,11 +211,6 @@ class UploadService(object):
 
 @interface.implementer(ICourseService)
 class CourseService(object):
-    """
-    Service that provides methods to manage and interact with courses on the
-    SCORM Cloud. These methods correspond to the "rustici.course.*" web service
-    methods.
-    """
 
     def __init__(self, service):
         self.service = service

@@ -28,6 +28,7 @@ from nti.scorm_cloud.client import Configuration
 from nti.scorm_cloud.client import ScormCloudService
 from nti.scorm_cloud.client import ScormCloudUtilities
 
+from nti.scorm_cloud.interfaces import IDebugService
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IScormCloudService
 
@@ -51,6 +52,10 @@ class TestClient(unittest.TestCase):
         cs = service.get_course_service()
         assert_that(cs, validly_provides(ICourseService))
         assert_that(cs, verifiably_provides(ICourseService))
+        
+        ds = service.get_debug_service()
+        assert_that(ds, validly_provides(IDebugService))
+        assert_that(ds, verifiably_provides(IDebugService))
 
     def test_scorm_cloud_utilities(self):
         s = ScormCloudUtilities.get_canonical_origin_string("NextThought&", "Dataserver*",
