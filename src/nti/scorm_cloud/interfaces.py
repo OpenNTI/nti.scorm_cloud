@@ -12,6 +12,10 @@ from zope import interface
 
 
 class IScormCloudService(interface.Interface):
+    """
+    Primary cloud service object that provides access to the more specific
+    service areas, like the RegistrationService.
+    """
 
     def get_course_service():
         """
@@ -45,6 +49,11 @@ class IScormCloudService(interface.Interface):
 
 
 class ICourseService(interface.Interface):
+    """
+    Service that provides methods to manage and interact with courses on the
+    SCORM Cloud. These methods correspond to the "rustici.course.*" web service
+    methods.
+    """
 
     def import_uploaded_course(courseid, path):
         """
@@ -136,4 +145,22 @@ class ICourseService(interface.Interface):
         Arguments:
         courseid -- the unique identifier for the course
         attributePairs -- the attribute name/value pairs to update
+        """
+
+
+class IDebugService(interface.Interface):
+    """
+    Debugging and testing service that allows you to check the status of the
+    SCORM Cloud and test your configuration settings.
+    """
+
+    def ping():
+        """
+        A simple ping that checks the connection to the SCORM Cloud.
+        """
+
+    def authping():
+        """
+        An authenticated ping that checks the connection to the SCORM Cloud
+        and verifies the configured credentials.
         """
