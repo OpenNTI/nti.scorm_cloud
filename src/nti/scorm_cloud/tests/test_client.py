@@ -30,6 +30,7 @@ from nti.scorm_cloud.client import ScormCloudUtilities
 
 from nti.scorm_cloud.interfaces import IDebugService
 from nti.scorm_cloud.interfaces import ICourseService
+from nti.scorm_cloud.interfaces import IUploadService
 from nti.scorm_cloud.interfaces import IScormCloudService
 
 
@@ -56,6 +57,10 @@ class TestClient(unittest.TestCase):
         ds = service.get_debug_service()
         assert_that(ds, validly_provides(IDebugService))
         assert_that(ds, verifiably_provides(IDebugService))
+        
+        us = service.get_upload_service()
+        assert_that(us, validly_provides(IUploadService))
+        assert_that(us, verifiably_provides(IUploadService))
 
     def test_scorm_cloud_utilities(self):
         s = ScormCloudUtilities.get_canonical_origin_string("NextThought&", "Dataserver*",

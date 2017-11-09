@@ -164,3 +164,26 @@ class IDebugService(interface.Interface):
         An authenticated ping that checks the connection to the SCORM Cloud
         and verifies the configured credentials.
         """
+
+
+class IUploadService(interface.Interface):
+    """
+    Service that provides functionality to upload files to the SCORM Cloud.
+    """
+
+    def get_upload_token():
+        """
+        Retrieves an upload token which must be used to successfully upload a
+        file.
+        """
+
+    def get_upload_url(callbackurl):
+        """
+        Returns a URL that can be used to upload a file via HTTP POST, through
+        an HTML form element action, for example.
+        """
+
+    def delete_file(location):
+        """
+        Deletes the specified file.
+        """
