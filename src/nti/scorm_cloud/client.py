@@ -834,12 +834,13 @@ class ServiceRequest(object):
         dictionary['ts'] = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
         dictionary['applib'] = "python"
         dictionary = make_utf8(dictionary)
-        signing = ''
         values = list()
+        signing = list()
         secret = self.service.config.secret
         for key in sorted(dictionary.keys(), key=str.lower):
-            signing += key + dictionary[key]
+            signing.append(key + dictionary[key])
             values.append(key + '=' + quote_plus(dictionary[key]))
+        signing = ''.join(signing)
         values.append('sig=' + md5(secret + signing).hexdigest())
         return '&'.join(values)
 

@@ -10,6 +10,17 @@ from __future__ import absolute_import
 
 import six
 
+
+def bytes_(s, encoding='utf-8', errors='strict'):
+    """
+    If ``s`` is an instance of ``text_type``, return
+    ``s.encode(encoding, errors)``, otherwise return ``s``
+    """
+    if not isinstance(s, bytes) and s is not None:
+        return s.encode(encoding, errors)
+    return s
+
+
 if six.PY3:  # pragma: no cover
     def native_(s, encoding='latin-1', errors='strict'):
         """ 
