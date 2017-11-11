@@ -60,17 +60,15 @@ class ICourseService(interface.Interface):
         Imports a SCORM PIF (zip file) from an existing zip file on the SCORM
         Cloud server.
 
-        Arguments:
-        courseid -- the unique identifier for the course
-        path -- the relative path to the zip file to import
+        :param courseid: the unique identifier for the course
+        :param path: the relative path to the zip file to import
         """
 
     def delete_course(courseid):
         """
         Deletes the specified course.
 
-        Arguments:
-        courseid -- the unique identifier for the course
+        :param courseid: the unique identifier for the course
         """
 
     def get_assets(courseid, path=None):
@@ -78,9 +76,8 @@ class ICourseService(interface.Interface):
         Downloads a file from a course by path. If no path is provided, all the
         course files will be downloaded contained in a zip file.
 
-        Arguments:
-        courseid -- the unique identifier for the course
-        path -- the path (relative to the course root) of the file to download.
+        :param courseid: the unique identifier for the course
+        :param path: the path (relative to the course root) of the file to download.
             If not provided or is None, all course files will be downloaded.
         """
 
@@ -89,9 +86,9 @@ class ICourseService(interface.Interface):
         Retrieves a list of CourseData elements for all courses owned by the
         configured AppID that meet the specified filter criteria.
 
-        Arguments:
-        courseIdFilterRegex -- (optional) Regular expression to filter courses
+        :param courseIdFilterRegex: (optional) Regular expression to filter courses
             by ID
+        :type courseIdFilterRegex: str
         """
 
     def get_preview_url(courseid, redirecturl, stylesheeturl=None):
@@ -100,18 +97,19 @@ class ICourseService(interface.Interface):
         for a registration.
 
         Arguments:
-        courseid -- the unique identifier for the course
-        redirecturl -- the URL to which the browser should redirect upon course
+        :param courseid: the unique identifier for the course
+        :param redirecturl: the URL to which the browser should redirect upon course
             exit
-        stylesheeturl -- the URL for the CSS stylesheet to include
+        :param stylesheeturl: the URL for the CSS stylesheet to include
+        :type redirecturl: str
+        :type stylesheeturl: str
         """
 
     def get_metadata(courseid):
         """
         Gets the course metadata in XML format.
 
-        Arguments:
-        courseid -- the unique identifier for the course
+        :param courseid: the unique identifier for the course
         """
 
     def get_property_editor_url(courseid, stylesheetUrl=None,
@@ -120,31 +118,30 @@ class ICourseService(interface.Interface):
         Gets the URL to view/edit the package properties for the course.
         Typically used within an IFRAME element.
 
-        Arguments:
-        courseid -- the unique identifier for the course
-        stylesheeturl -- URL to a custom editor stylesheet
-        notificationFrameUrl -- Tells the property editor to render a sub-iframe
+        :param courseid: the unique identifier for the course
+        :param stylesheeturl -- URL to a custom editor stylesheet
+        :param notificationFrameUrl -- Tells the property editor to render a sub-iframe
             with this URL as the source. This can be used to simulate an 
             "onload" by using a notificationFrameUrl that is on the same domain 
             as the host system and calling parent.parent.method()
+        :type stylesheeturl: str
+        :type notificationFrameUrl: str
         """
 
     def get_attributes(courseid):
         """
         Retrieves the list of associated attributes for the course. 
 
-        Arguments:
-        courseid -- the unique identifier for the course
-        versionid -- the specific version of the course
+        :param courseid: the unique identifier for the course
+        :param versionid: the specific version of the course
         """
 
     def update_attributes(courseid, attributePairs):
         """
         Updates the specified attributes for the course.
 
-        Arguments:
-        courseid -- the unique identifier for the course
-        attributePairs -- the attribute name/value pairs to update
+        :param courseid: the unique identifier for the course
+        :param attributePairs: the attribute name/value pairs to update
         """
 
 
@@ -201,13 +198,18 @@ class IRegistrationService(interface.Interface):
         """
         Creates a new registration (an instance of a user taking a course).
 
-        Arguments:
-        regid -- the unique identifier for the registration
-        courseid -- the unique identifier for the course
-        userid -- the unique identifier for the learner
-        fname -- the learner's first name
-        lname -- the learner's last name
-        email -- the learner's email address
+        :param regid: (optional) the unique identifier for the registration
+        :param courseid: the unique identifier for the course
+        :param userid: the unique identifier for the learner
+        :param fname: the learner's first name
+        :param lname: the learner's last name
+        :param email: the learner's email address
+        :type regid: str
+        :type fname: str
+        :type fname: str
+        :type email: str
+        :return: return unique identifier for the registration
+        :rtype: email: str
         """
 
     def get_launch_url(regid, redirecturl, cssUrl=None, courseTags=None,
@@ -215,17 +217,22 @@ class IRegistrationService(interface.Interface):
         """
         Gets the URL to directly launch the course in a web browser.
 
-        Arguments:
-        regid -- the unique identifier for the registration
-        redirecturl -- the URL to which the SCORM player will redirect upon
+        :param regid: the unique identifier for the registration
+        :param redirecturl: the URL to which the SCORM player will redirect upon
             course exit
-        cssUrl -- the URL to a custom stylesheet
-        courseTags -- comma-delimited list of tags to associate with the
+        :param cssUrl: the URL to a custom stylesheet
+        :param courseTags -- comma-delimited list of tags to associate with the
             launched course
-        learnerTags -- comma-delimited list of tags to associate with the
+        :param learnerTags -- comma-delimited list of tags to associate with the
             learner launching the course
-        registrationTags -- comma-delimited list of tags to associate with the
+        :param registrationTags -- comma-delimited list of tags to associate with the
             launched registration
+        :type regid: str
+        :type redirecturl: str
+        :type cssUrl: str
+        :type courseTags: list of str
+        :type learnerTags: list of str
+        :type registrationTags: list of str
         """
 
     def get_registration_list(regIdFilterRegex=None,
@@ -234,21 +241,23 @@ class IRegistrationService(interface.Interface):
         Retrieves a list of registration associated with the configured AppID.
         Can optionally be filtered by registration or course ID.
 
-        Arguments:
-        regIdFilterRegex -- (optional) the regular expression used to filter the 
+        :param regIdFilterRegex: (optional) the regular expression used to filter the 
             list by registration ID
-        courseIdFilterRegex -- (optional) the regular expression used to filter
+        :param courseIdFilterRegex: (optional) the regular expression used to filter
             the list by course ID
+        :type regIdFilterRegex: str
+        :type courseIdFilterRegex: str
         """
 
     def get_registration_result(regid, resultsformat):
         """
         Gets information about the specified registration.
 
-        Arguments:
-        regid -- the unique identifier for the registration
-        resultsformat -- (optional) can be "course", "activity", or "full" to
+        :param regid: the unique identifier for the registration
+        :param resultsformat -- (optional) can be "course", "activity", or "full" to
             determine the level of detail returned. The default is "course"
+        :type regid: str
+        :type resultsformat: str
         """
 
     def get_launch_history(regid):
@@ -257,8 +266,8 @@ class IRegistrationService(interface.Interface):
         LaunchInfo objects do not contain the full launch history log; use
         get_launch_info to retrieve the full launch information.
 
-        Arguments:
-        regid -- the unique identifier for the registration
+        :param regid: the unique identifier for the registration
+        :type regid: str
         """
 
     def reset_registration(regid):
@@ -266,22 +275,22 @@ class IRegistrationService(interface.Interface):
         Resets all status data for the specified registration, essentially
         restarting the course for the associated learner.
 
-        Arguments:
-        regid -- the unique identifier for the registration
+        :param regid: the unique identifier for the registration
+        :type regid: str
         """
 
     def reset_global_objectives(regid):
         """
         Clears global objective data for the specified registration.
 
-        Arguments:
-        regid -- the unique identifier for the registration
+        :param regid: the unique identifier for the registration
+        :type regid: str
         """
 
     def delete_registration(regid):
         """
         Deletes the specified registration.
 
-        Arguments:
-        regid -- the unique identifier for the registration
+        :param regid: the unique identifier for the registration
+        :type regid: str
         """

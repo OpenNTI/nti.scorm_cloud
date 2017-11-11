@@ -294,7 +294,7 @@ class RegistrationService(object):
     def create_registration(self, regid, courseid, userid, fname, lname,
                             email=None, learnerTags=None, courseTags=None,
                             registrationTags=None):
-        if regid is None:
+        if not regid:
             regid = str(uuid.uuid1())
         request = self.service.request()
         request.parameters['appid'] = self.service.config.appid
