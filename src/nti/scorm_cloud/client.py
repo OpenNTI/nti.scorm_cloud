@@ -616,10 +616,10 @@ class TagSettings(object):
         return self
 
     def get_tag_str(self, tagType):
-        return ','.join(self.tags[tagType]) + "|_all"
+        return ','.join(sorted(self.tags[tagType])) + "|_all"
 
     def get_view_tag_str(self, tagType):
-        return ','.join(self.tags[tagType])
+        return ','.join(sorted(self.tags[tagType]))
 
     def get_url_encoding(self):
         result = []
