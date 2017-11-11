@@ -187,3 +187,101 @@ class IUploadService(interface.Interface):
         """
         Deletes the specified file.
         """
+
+
+class IRegistrationService(interface.Interface):
+    """
+    Service that provides methods for managing and interacting with
+    registrations on the SCORM Cloud. These methods correspond to the
+    "rustici.registration.*" web service methods.
+    """
+
+    def create_registration(regid, courseid, userid, fname, lname,
+                            email=None, learnerTags=None, courseTags=None, registrationTags=None):
+        """
+        Creates a new registration (an instance of a user taking a course).
+
+        Arguments:
+        regid -- the unique identifier for the registration
+        courseid -- the unique identifier for the course
+        userid -- the unique identifier for the learner
+        fname -- the learner's first name
+        lname -- the learner's last name
+        email -- the learner's email address
+        """
+
+    def get_launch_url(regid, redirecturl, cssUrl=None, courseTags=None,
+                       learnerTags=None, registrationTags=None):
+        """
+        Gets the URL to directly launch the course in a web browser.
+
+        Arguments:
+        regid -- the unique identifier for the registration
+        redirecturl -- the URL to which the SCORM player will redirect upon
+            course exit
+        cssUrl -- the URL to a custom stylesheet
+        courseTags -- comma-delimited list of tags to associate with the
+            launched course
+        learnerTags -- comma-delimited list of tags to associate with the
+            learner launching the course
+        registrationTags -- comma-delimited list of tags to associate with the
+            launched registration
+        """
+
+    def get_registration_list(regIdFilterRegex=None,
+                              courseIdFilterRegex=None):
+        """
+        Retrieves a list of registration associated with the configured AppID.
+        Can optionally be filtered by registration or course ID.
+
+        Arguments:
+        regIdFilterRegex -- (optional) the regular expression used to filter the 
+            list by registration ID
+        courseIdFilterRegex -- (optional) the regular expression used to filter
+            the list by course ID
+        """
+
+    def get_registration_result(regid, resultsformat):
+        """
+        Gets information about the specified registration.
+
+        Arguments:
+        regid -- the unique identifier for the registration
+        resultsformat -- (optional) can be "course", "activity", or "full" to
+            determine the level of detail returned. The default is "course"
+        """
+
+    def get_launch_history(regid):
+        """
+        Retrieves a list of LaunchInfo objects describing each launch. These
+        LaunchInfo objects do not contain the full launch history log; use
+        get_launch_info to retrieve the full launch information.
+
+        Arguments:
+        regid -- the unique identifier for the registration
+        """
+
+    def reset_registration(regid):
+        """
+        Resets all status data for the specified registration, essentially
+        restarting the course for the associated learner.
+
+        Arguments:
+        regid -- the unique identifier for the registration
+        """
+
+    def reset_global_objectives(regid):
+        """
+        Clears global objective data for the specified registration.
+
+        Arguments:
+        regid -- the unique identifier for the registration
+        """
+
+    def delete_registration(regid):
+        """
+        Deletes the specified registration.
+
+        Arguments:
+        regid -- the unique identifier for the registration
+        """
