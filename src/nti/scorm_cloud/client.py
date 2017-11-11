@@ -29,6 +29,8 @@ from nti.scorm_cloud.compat import native_
 from nti.scorm_cloud.interfaces import IDebugService
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IUploadService
+from nti.scorm_cloud.interfaces import IReportingService
+from nti.scorm_cloud.interfaces import IInvitationService
 from nti.scorm_cloud.interfaces import IScormCloudService
 from nti.scorm_cloud.interfaces import IRegistrationService
 
@@ -372,20 +374,21 @@ class RegistrationService(object):
         return request.call_service('rustici.registration.deleteRegistration')
 
 
+@interface.implementer(IInvitationService)
 class InvitationService(object):
 
     def __init__(self, service):
         self.service = service
 
-    def create_invitation(self, courseid, publicInvitation='true', send='true', addresses=None,
+    def create_invitation(self, courseid, publicInvitation=True, send=True, addresses=None,
                           emailSubject=None, emailBody=None, creatingUserEmail=None,
                           registrationCap=None, postbackUrl=None, authType=None, urlName=None,
-                          urlPass=None, resultsFormat=None, async=False):
+                          urlPass=None, resultsFormat=None, async_=False):
         request = self.service.request()
 
         request.parameters['courseid'] = courseid
-        request.parameters['send'] = send
-        request.parameters['public'] = publicInvitation
+        request.parameters['send'] = str(send).lower()
+        request.parameters['public'] = str(publicInvitation).lower()
 
         if addresses is not None:
             request.parameters['addresses'] = addresses
@@ -408,7 +411,7 @@ class InvitationService(object):
         if resultsFormat is not None:
             request.parameters['resultsFormat'] = resultsFormat
 
-        if async:
+        if async_:
             data = request.call_service('rustici.invitation.createInvitationAsync')
         else:
             data = request.call_service('rustici.invitation.createInvitation')
@@ -448,18 +451,13 @@ class InvitationService(object):
         return data
 
 
+@interface.implementer(IReportingService)
 class ReportingService(object):
-    """
-    Service that provides methods for interacting with the Reportage service.
-    """
 
     def __init__(self, service):
         self.service = service
 
     def get_reportage_date(self):
-        """
-        Gets the date/time, according to Reportage.
-        """
         reportUrl = (
             self._get_reportage_service_url() +
             'Reportage/scormreports/api/getReportDate.php?appId=' +
@@ -472,19 +470,6 @@ class ReportingService(object):
         return d.strptime(reply, "%Y-%m-%d %H:%M:%S")
 
     def get_reportage_auth(self, navperm, allowadmin):
-        """
-        Authenticates against the Reportage application, returning a session
-        string used to make subsequent calls to launchReport.
-
-        Arguments:
-        navperm -- the Reportage navigation permissions to assign to the
-            session. If "NONAV", the session will be prevented from navigating
-            away from the original report/widget. "DOWNONLY" allows the user to
-            drill down into additional detail. "FREENAV" allows the user full
-            navigation privileges and the ability to change any reporting
-            parameter.
-        allowadmin -- if True, the Reportage session will have admin privileges
-        """
         request = self.service.request()
         request.parameters['navpermission'] = navperm
         request.parameters['admin'] = 'true' if allowadmin else 'false'
@@ -496,25 +481,14 @@ class ReportingService(object):
             return None
 
     def _get_reportage_service_url(self):
-        """
-        Returns the base Reportage URL.
-        """
         return self.service.config.serviceurl.replace('EngineWebServices', '')
 
     def _get_base_reportage_url(self):
-        return (self._get_reportage_service_url() + 'Reportage/reportage.php' +
-                '?appId=' + self.service.config.appid)
+        return (  self._get_reportage_service_url() 
+                + 'Reportage/reportage.php'
+                + '?appId=' + self.service.config.appid)
 
     def get_report_url(self, auth, reportUrl):
-        """
-        Returns an authenticated URL that can launch a Reportage session at
-        the specified Reportage entry point.
-
-        Arguments:
-        auth -- the Reportage authentication string, as retrieved from
-            get_reportage_auth
-        reportUrl -- the URL to the desired Reportage entry point
-        """
         request = self.service.request()
         request.parameters['auth'] = auth
         request.parameters['reporturl'] = reportUrl
@@ -522,13 +496,6 @@ class ReportingService(object):
         return url
 
     def get_reportage_url(self, auth):
-        """
-        Returns the authenticated URL to the main Reportage entry point.
-
-        Arguments:
-        auth -- the Reportage authentication string, as retrieved from
-            get_reportage_auth
-        """
         reporturl = self._get_base_reportage_url()
         return self.get_report_url(auth, reporturl)
 
@@ -537,16 +504,6 @@ class ReportingService(object):
         return self.get_report_url(auth, reporturl)
 
     def get_widget_url(self, auth, widgettype, widgetSettings):
-        """
-        Gets the URL to a specific Reportage widget, using the provided
-        widget settings.
-
-        Arguments:
-        auth -- the Reportage authentication string, as retrieved from
-            get_reportage_auth
-        widgettype -- the widget type desired (for example, learnerSummary)
-        widgetSettings -- the WidgetSettings object for the widget type
-        """
         reportUrl = (self._get_reportage_service_url() +
                      'Reportage/scormreports/widgets/')
         widgetUrlTypeLib = {
@@ -633,6 +590,7 @@ class WidgetSettings(object):
 
 
 class DateRangeSettings(object):
+
     def __init__(self, dateRangeType, dateRangeStart,
                  dateRangeEnd, dateCriteria):
         self.dateRangeType = dateRangeType
@@ -729,7 +687,7 @@ class CourseData(object):
     numberOfVersions = 1
     numberOfRegistrations = 0
 
-    def __init__(self, courseDataElement):
+    def __init__(self, courseDataElement=None):
         if courseDataElement is not None:
             attributes = courseDataElement.attributes
             self.courseId = attributes['id'].value
@@ -904,12 +862,14 @@ class ScormCloudUtilities(object):
         SCORM Cloud configuration. Takes the organization name, application
         name, and application version.
 
-        Arguments:
-        organization -- the name of the organization that created the software
+        :param organization: the name of the organization that created the software
             using the Python Cloud library
-        application -- the name of the application software using the Python
+        :param application: the name of the application software using the Python
             Cloud library
-        version -- the version string for the application software
+        :param version: the version string for the application software
+        :type organization: str
+        :type application: str
+        :type version: str
         """
         namepattern = re.compile(r'[^a-z0-9]')
         versionpattern = re.compile(r'[^a-z0-9\.\-]')
@@ -926,8 +886,9 @@ class ScormCloudUtilities(object):
         meet this assumption.
 
         Arguments:
-        url -- the URL for the Cloud service, typically as entered by a user
+        :param url: the URL for the Cloud service, typically as entered by a user
             in their configuration
+        :type url: str
         """
         parts = url.split('/')
         if not parts[len(parts) - 1] == 'api':

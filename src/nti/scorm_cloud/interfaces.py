@@ -296,6 +296,66 @@ class IRegistrationService(interface.Interface):
         """
 
 
+class IInvitationService(interface.Interface):
+    """
+    Service that provides methods for interacting with the invitation service.
+    """
+
+    def create_invitation(courseid, publicInvitation=True, send=True, addresses=None,
+                          emailSubject=None, emailBody=None, creatingUserEmail=None,
+                          registrationCap=None, postbackUrl=None, authType=None, urlName=None,
+                          urlPass=None, resultsFormat=None, async_=False):
+        """
+        Creates an invitation
+
+        :param courseid: the course identifier
+        :param publicInvitation: public invitation flag
+        :param send: Send invitation flag
+        :param addresses: the email address
+        :param emailSubject: the email subject
+        :param emailBody: the email body
+        :param async_: the async flag
+        :type courseid: str
+        :type publicInvitation: bool
+        :type send: bool
+        :type addresses: str
+        :type emailSubject: str
+        :type async_: bool
+        """
+
+    def get_invitation_list(filter_=None, coursefilter=None):
+        """
+        Retrieves a list of invitations
+
+        :param filter_: (optional) invitation filter
+        :param coursefilter: (optional) the course filter
+        """
+
+    def get_invitation_status(invitationId):
+        """
+        Retrieves the status of an invitation
+
+        :param invitationId: the invitation identifier
+        """
+
+    def get_invitation_info(invitationId, detail=None):
+        """
+        Retrieves the information associated with an invitation
+
+        :param invitationId: the invitation identifier
+        :param detail: the detail flag
+        """
+
+    def change_status(invitationId, enable, open_=None):
+        """
+        Change the status of an invitation
+
+        :param invitationId: the invitation identifier
+        :param enable: the enable invitation flag
+        :param open_: the open invitation flag
+        """
+
+
 class IReportingService(interface.Interface):
     """
     Service that provides methods for interacting with the Reportage service.
@@ -317,14 +377,9 @@ class IReportingService(interface.Interface):
             drill down into additional detail. "FREENAV" allows the user full
             navigation privileges and the ability to change any reporting
             parameter.
-        :param allowadmin if True, the Reportage session will have admin privileges
+        :param allowadmin: if True, the Reportage session will have admin privileges
         :type navperm: str
         :type allowadmin: bool
-        """
-
-    def _get_reportage_service_url(self):
-        """
-        Returns the base Reportage URL.
         """
 
     def get_report_url(auth, reportUrl):
@@ -363,5 +418,5 @@ class IReportingService(interface.Interface):
         :param auth: the Reportage authentication string, as retrieved from
             get_reportage_auth
         :param widgettype: the widget type desired (for example, learnerSummary)
-        :param widgetSettings: the WidgetSettings object for the widget type
+        :param widgetSettings: the :class:`IWidgetSettings` object for the widget type
         """
