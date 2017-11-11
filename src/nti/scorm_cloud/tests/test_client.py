@@ -21,8 +21,6 @@ from nti.testing.matchers import verifiably_provides
 import six
 import unittest
 
-from nti.scorm_cloud.tests import SharedConfiguringTestLayer
-
 from nti.scorm_cloud.client import make_utf8
 from nti.scorm_cloud.client import Configuration
 from nti.scorm_cloud.client import ScormCloudService
@@ -35,6 +33,8 @@ from nti.scorm_cloud.interfaces import IReportingService
 from nti.scorm_cloud.interfaces import IInvitationService
 from nti.scorm_cloud.interfaces import IScormCloudService
 from nti.scorm_cloud.interfaces import IRegistrationService
+
+from nti.scorm_cloud.tests import SharedConfiguringTestLayer
 
 
 class TestClient(unittest.TestCase):
