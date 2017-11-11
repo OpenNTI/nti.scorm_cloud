@@ -15,6 +15,7 @@ from hashlib import md5
 from xml.dom import minidom
 
 from six import text_type
+from six.moves.urllib_parse import quote
 from six.moves.urllib_parse import quote_plus
 
 try:
@@ -26,10 +27,13 @@ from zope import interface
 
 from nti.scorm_cloud.compat import native_
 
+from nti.scorm_cloud.interfaces import ITagSettings
 from nti.scorm_cloud.interfaces import IDebugService
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IUploadService
+from nti.scorm_cloud.interfaces import IWidgetSettings
 from nti.scorm_cloud.interfaces import IReportingService
+from nti.scorm_cloud.interfaces import IDateRangeSettings
 from nti.scorm_cloud.interfaces import IInvitationService
 from nti.scorm_cloud.interfaces import IScormCloudService
 from nti.scorm_cloud.interfaces import IRegistrationService
@@ -180,8 +184,7 @@ class UploadService(object):
         if server and tokenid:
             token = UploadToken(server, tokenid)
             return token
-        else:
-            return None
+        return None
 
     def get_upload_url(self, callbackurl):
         token = self.get_upload_token()
@@ -190,8 +193,7 @@ class UploadService(object):
             request.parameters['tokenid'] = token.tokenid
             request.parameters['redirecturl'] = callbackurl
             return request.construct_url('rustici.upload.uploadFile')
-        else:
-            return None
+        return None
 
     def delete_file(self, location):
         locParts = location.split("/")
@@ -211,8 +213,8 @@ class CourseService(object):
         request.parameters['courseid'] = courseid
         request.parameters['path'] = path
         result = request.call_service('rustici.course.importCourse')
-        ir = ImportResult.list_from_result(result)
-        return ir
+        result = ImportResult.list_from_result(result)
+        return result
 
     def delete_course(self, courseid):
         request = self.service.request()
@@ -222,13 +224,13 @@ class CourseService(object):
     def get_assets(self, courseid, path=None):
         request = self.service.request()
         request.parameters['courseid'] = courseid
-        if (path is not None):
+        if path:
             request.parameters['path'] = path
         return request.call_service('rustici.course.getAssets')
 
     def get_course_list(self, courseIdFilterRegex=None):
         request = self.service.request()
-        if courseIdFilterRegex is not None:
+        if courseIdFilterRegex:
             request.parameters['filter'] = courseIdFilterRegex
         result = request.call_service('rustici.course.getCourseList')
         courses = CourseData.list_from_result(result)
@@ -238,7 +240,7 @@ class CourseService(object):
         request = self.service.request()
         request.parameters['courseid'] = courseid
         request.parameters['redirecturl'] = redirecturl
-        if stylesheeturl is not None:
+        if stylesheeturl:
             request.parameters['stylesheet'] = stylesheeturl
         url = request.construct_url('rustici.course.preview')
         logger.info('preview link: ' + url)
@@ -253,11 +255,10 @@ class CourseService(object):
                                 notificationFrameUrl=None):
         request = self.service.request()
         request.parameters['courseid'] = courseid
-        if stylesheetUrl is not None:
+        if stylesheetUrl:
             request.parameters['stylesheet'] = stylesheetUrl
-        if notificationFrameUrl is not None:
+        if notificationFrameUrl:
             request.parameters['notificationframesrc'] = notificationFrameUrl
-
         url = request.construct_url('rustici.course.properties')
         logger.info('properties link: ' + url)
         return url
@@ -266,23 +267,21 @@ class CourseService(object):
         request = self.service.request()
         request.parameters['courseid'] = courseid
         xmldoc = request.call_service('rustici.course.getAttributes')
-
         atts = {}
         attrNodes = xmldoc.getElementsByTagName('attribute')
-        for an in attrNodes:
+        for an in attrNodes or ():
             atts[an.attributes['name'].value] = an.attributes['value'].value
         return atts
 
     def update_attributes(self, courseid, attributePairs):
         request = self.service.request()
         request.parameters['courseid'] = courseid
-        for (key, value) in attributePairs.iteritems():
+        for key, value in attributePairs.items():
             request.parameters[key] = value
         xmldoc = request.call_service('rustici.course.updateAttributes')
-
-        attrNodes = xmldoc.getElementsByTagName('attribute')
         atts = {}
-        for an in attrNodes:
+        attrNodes = xmldoc.getElementsByTagName('attribute')
+        for an in attrNodes or ():
             atts[an.attributes['name'].value] = an.attributes['value'].value
         return atts
 
@@ -305,11 +304,11 @@ class RegistrationService(object):
         request.parameters['fname'] = fname
         request.parameters['lname'] = lname
         request.parameters['learnerid'] = userid
-        if email is not None:
+        if email:
             request.parameters['email'] = email
-        if learnerTags is not None:
+        if learnerTags:
             request.parameters['learnerTags'] = learnerTags
-        if courseTags is not None:
+        if courseTags:
             request.parameters['courseTags'] = courseTags
         if registrationTags is not None:
             request.parameters['registrationTags'] = registrationTags
@@ -325,24 +324,23 @@ class RegistrationService(object):
         request = self.service.request()
         request.parameters['regid'] = regid
         request.parameters['redirecturl'] = redirecturl + '?regid=' + regid
-        if cssUrl is not None:
+        if cssUrl:
             request.parameters['cssurl'] = cssUrl
-        if courseTags is not None:
+        if courseTags:
             request.parameters['coursetags'] = courseTags
-        if learnerTags is not None:
+        if learnerTags:
             request.parameters['learnertags'] = learnerTags
-        if registrationTags is not None:
+        if registrationTags:
             request.parameters['registrationTags'] = registrationTags
         url = request.construct_url('rustici.registration.launch')
         return url
 
     def get_registration_list(self, regIdFilterRegex=None, courseIdFilterRegex=None):
         request = self.service.request()
-        if regIdFilterRegex is not None:
+        if regIdFilterRegex:
             request.parameters['filter'] = regIdFilterRegex
-        if courseIdFilterRegex is not None:
+        if courseIdFilterRegex:
             request.parameters['coursefilter'] = courseIdFilterRegex
-
         result = request.call_service('rustici.registration.getRegistrationList')
         regs = RegistrationData.list_from_result(result)
         return regs
@@ -390,25 +388,25 @@ class InvitationService(object):
         request.parameters['send'] = str(send).lower()
         request.parameters['public'] = str(publicInvitation).lower()
 
-        if addresses is not None:
+        if addresses:
             request.parameters['addresses'] = addresses
-        if emailSubject is not None:
+        if emailSubject:
             request.parameters['emailSubject'] = emailSubject
-        if emailBody is not None:
+        if emailBody:
             request.parameters['emailBody'] = emailBody
-        if creatingUserEmail is not None:
+        if creatingUserEmail:
             request.parameters['creatingUserEmail'] = creatingUserEmail
-        if registrationCap is not None:
+        if registrationCap:
             request.parameters['registrationCap'] = registrationCap
-        if postbackUrl is not None:
+        if postbackUrl:
             request.parameters['postbackUrl'] = postbackUrl
-        if authType is not None:
+        if authType:
             request.parameters['authType'] = authType
-        if urlName is not None:
+        if urlName:
             request.parameters['urlName'] = urlName
-        if urlPass is not None:
+        if urlPass:
             request.parameters['urlPass'] = urlPass
-        if resultsFormat is not None:
+        if resultsFormat:
             request.parameters['resultsFormat'] = resultsFormat
 
         if async_:
@@ -477,8 +475,7 @@ class ReportingService(object):
         token = xmldoc.getElementsByTagName('auth')
         if token.length > 0:
             return token[0].childNodes[0].nodeValue
-        else:
-            return None
+        return None
 
     def _get_reportage_service_url(self):
         return self.service.config.serviceurl.replace('EngineWebServices', '')
@@ -538,11 +535,12 @@ class ReportingService(object):
         return reportUrl
 
 
+@interface.implementer(IWidgetSettings)
 class WidgetSettings(object):
 
-    def __init__(self, dateRangeSettings, tagSettings):
-        self.dateRangeSettings = dateRangeSettings
+    def __init__(self, dateRangeSettings=None, tagSettings=None):
         self.tagSettings = tagSettings
+        self.dateRangeSettings = dateRangeSettings
 
         self.courseId = None
         self.learnerId = None
@@ -554,31 +552,28 @@ class WidgetSettings(object):
         self.iframe = False
         self.expand = True
         self.scriptBased = True
-        self.divname = ''
+
+        self.divname = u''
         self.embedded = True
         self.viewall = True
         self.export = True
 
     def get_url_encoding(self):
-        """
-        Returns the widget settings as encoded URL parameters to add to a 
-        Reportage widget URL.
-        """
         widgetUrlStr = ''
-        if self.courseId is not None:
-            widgetUrlStr += '&courseId=' + self.courseId
-        if self.learnerId is not None:
-            widgetUrlStr += '&learnerId=' + self.learnerId
+        if self.courseId:
+            widgetUrlStr += '&courseId=' + quote(self.courseId)
+        if self.learnerId:
+            widgetUrlStr += '&learnerId=' + quote(self.learnerId)
 
-        widgetUrlStr += '&showTitle=' + 'self.showTitle'.lower()
-        widgetUrlStr += '&standalone=' + 'self.standalone'.lower()
+        widgetUrlStr += '&showTitle=' + str(self.showTitle).lower()
+        widgetUrlStr += '&standalone=' + str(self.standalone).lower()
         if self.iframe:
             widgetUrlStr += '&iframe=true'
-        widgetUrlStr += '&expand=' + 'self.expand'.lower()
-        widgetUrlStr += '&scriptBased=' + 'self.scriptBased'.lower()
-        widgetUrlStr += '&divname=' + self.divname
-        widgetUrlStr += '&vertical=' + 'self.vertical'.lower()
-        widgetUrlStr += '&embedded=' + 'self.embedded'.lower()
+        widgetUrlStr += '&expand=' + str(self.expand).lower()
+        widgetUrlStr += '&scriptBased=' + str(self.scriptBased).lower()
+        widgetUrlStr += '&divname=' + quote(self.divname)
+        widgetUrlStr += '&vertical=' + str(self.vertical).lower()
+        widgetUrlStr += '&embedded=' + str(self.embedded).lower()
 
         if self.dateRangeSettings is not None:
             widgetUrlStr += self.dateRangeSettings.get_url_encoding()
@@ -589,56 +584,56 @@ class WidgetSettings(object):
         return widgetUrlStr
 
 
+@interface.implementer(IDateRangeSettings)
 class DateRangeSettings(object):
 
-    def __init__(self, dateRangeType, dateRangeStart,
-                 dateRangeEnd, dateCriteria):
-        self.dateRangeType = dateRangeType
-        self.dateRangeStart = dateRangeStart
+    def __init__(self, dateRangeType, dateRangeStart, dateRangeEnd, dateCriteria):
         self.dateRangeEnd = dateRangeEnd
         self.dateCriteria = dateCriteria
+        self.dateRangeType = dateRangeType
+        self.dateRangeStart = dateRangeStart
 
     def get_url_encoding(self):
-        """
-        Returns the DateRangeSettings as encoded URL parameters to add to a
-        Reportage widget URL.
-        """
-        dateRangeStr = ''
+        result = ''
         if self.dateRangeType == 'selection':
-            dateRangeStr += '&dateRangeType=c'
-            dateRangeStr += '&dateRangeStart=' + self.dateRangeStart
-            dateRangeStr += '&dateRangeEnd=' + self.dateRangeEnd
+            result += '&dateRangeType=c'
+            result += '&dateRangeStart=' + quote(self.dateRangeStart)
+            result += '&dateRangeEnd=' + quote(self.dateRangeEnd)
         else:
-            dateRangeStr += '&dateRangeType=' + self.dateRangeType
+            result += '&dateRangeType=' + quote(self.dateRangeType)
+        result += '&dateCriteria=' + quote(self.dateCriteria)
+        return result
 
-        dateRangeStr += '&dateCriteria=' + self.dateCriteria
-        return dateRangeStr
 
-
+@interface.implementer(ITagSettings)
 class TagSettings(object):
+
     def __init__(self):
-        self.tags = {'course': [], 'learner': [], 'registration': []}
+        self.tags = {'course': set(), 'learner': set(), 'registration': set()}
 
     def add(self, tagType, tagValue):
-        self.tags[tagType].append(tagValue)
+        self.tags[tagType].add(tagValue)
+        return self
 
     def get_tag_str(self, tagType):
-        return ','.join(set(self.tags[tagType])) + "|_all"
+        return ','.join(self.tags[tagType]) + "|_all"
 
     def get_view_tag_str(self, tagType):
-        return ','.join(set(self.tags[tagType]))
+        return ','.join(self.tags[tagType])
 
     def get_url_encoding(self):
-        tagUrlStr = ''
+        result = []
         for k in self.tags.keys():
-            if len(set(self.tags[k])) > 0:
-                tagUrlStr += '&' + k + 'Tags=' + self.get_tag_str(k)
-                tagUrlStr += ('&view' + k.capitalize() + 'TagGroups=' +
-                              self.get_view_tag_str(k))
-        return tagUrlStr
+            if self.tags[k]:
+                result.extend(('&', k))
+                result.extend(('Tags=', quote(self.get_tag_str(k))))
+                result.extend(('&view', k.capitalize()))
+                result.extend(('TagGroups=', quote(self.get_view_tag_str(k))))
+        return ''.join(result)
 
 
 class ScormCloudError(Exception):
+
     def __init__(self, msg, json=None):
         self.msg = msg
         self.json = json
@@ -712,7 +707,6 @@ class CourseData(object):
 
 
 class UploadToken(object):
-
     server = ""
     tokenid = ""
 
@@ -755,9 +749,9 @@ class ServiceRequest(object):
     """
 
     def __init__(self, service):
+        self.file_ = None
         self.service = service
         self.parameters = dict()
-        self.file_ = None
 
     def call_service(self, method, serviceurl=None):
         """

@@ -10,6 +10,10 @@ from __future__ import absolute_import
 
 from zope import interface
 
+from zope.schema import Bool
+from zope.schema import Object
+from zope.schema import TextLine
+
 
 class IScormCloudService(interface.Interface):
     """
@@ -353,6 +357,78 @@ class IInvitationService(interface.Interface):
         :param invitationId: the invitation identifier
         :param enable: the enable invitation flag
         :param open_: the open invitation flag
+        """
+
+
+class IDateRangeSettings(interface.Interface):
+
+    def get_url_encoding():
+        """
+        Returns the DateRangeSettings as encoded URL parameters to add to a
+        Reportage widget URL.
+        """
+
+
+class ITagSettings(interface.Interface):
+
+    def add(tagType, tagValue):
+        """
+        Add a tag
+
+        :param tagType: the tag type
+        :param tagValue: the tag value
+        """
+
+    def get_tag_str(tagType):
+        """
+        Return the tagType string
+
+        :param tagType: the tag type
+        """
+
+    def get_view_tag_str(tagType):
+        """
+        Return the tagType view string
+
+        :param tagType: the tag type
+        """
+
+    def get_url_encoding():
+        """
+        Return the TagSettings as encoded URL parameters
+        """
+
+
+class IWidgetSettings(interface.Interface):
+
+    tagSettings = Object(ITagSettings, 
+                         title=u"Tag settings", 
+                         required=False)
+    
+    dateRangeSettings = Object(ITagSettings, title=u"Tag settings", 
+                               required=False)
+    
+    courseId = TextLine(title=u"The course identifier", required=False)
+    learnerId = TextLine(title=u"The learner identifier", required=False)
+    
+    showTitle = Bool(title=u"Show title flag", default=True)
+    vertical = Bool(title=u"Show vertical flag", default=False)
+    public = Bool(title=u"Public flag", default=True)
+    standalone = Bool(title=u"Standalone flag", default=True)
+    iframe = Bool(title=u"iframe flag", default=False)
+    expand = Bool(title=u"Expand flag", default=True)
+    scriptBased = Bool(title=u"Script based flag", default=True)
+    
+    divname = TextLine(title=u"Div name", default=u'')
+
+    embedded = Bool(title=u"Embedded flag", default=True)
+    viewall = Bool(title=u"View all flag", default=True)
+    export = Bool(title=u"Export flag", default=True)
+
+    def get_url_encoding():
+        """
+        Returns the widget settings as encoded URL parameters to add to a 
+        Reportage widget URL.
         """
 
 
