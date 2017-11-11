@@ -14,6 +14,7 @@ from hamcrest import is_not
 from hamcrest import assert_that
 from hamcrest import has_entries
 from hamcrest import instance_of
+from hamcrest import starts_with
 
 from nti.testing.matchers import validly_provides
 from nti.testing.matchers import verifiably_provides
@@ -24,6 +25,7 @@ import unittest
 from nti.scorm_cloud.client import make_utf8
 from nti.scorm_cloud.client import TagSettings
 from nti.scorm_cloud.client import Configuration
+from nti.scorm_cloud.client import WidgetSettings
 from nti.scorm_cloud.client import DateRangeSettings
 from nti.scorm_cloud.client import ScormCloudService
 from nti.scorm_cloud.client import ScormCloudUtilities
@@ -32,6 +34,7 @@ from nti.scorm_cloud.interfaces import ITagSettings
 from nti.scorm_cloud.interfaces import IDebugService
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IUploadService
+from nti.scorm_cloud.interfaces import IWidgetSettings
 from nti.scorm_cloud.interfaces import IReportingService
 from nti.scorm_cloud.interfaces import IDateRangeSettings
 from nti.scorm_cloud.interfaces import IInvitationService
@@ -135,3 +138,22 @@ class TestSettings(unittest.TestCase):
                     is_('Rukia,Ichigo'))
         assert_that(s.get_url_encoding(),
                     is_('&courseTags=Bankai%7C_all&viewCourseTagGroups=Bankai&learnerTags=Rukia%2CIchigo%7C_all&viewLearnerTagGroups=Rukia%2CIchigo&registrationTags=SoulSociety%7C_all&viewRegistrationTagGroups=SoulSociety'))
+        
+
+    def test_widget(self):
+        s = WidgetSettings()
+        assert_that(s, validly_provides(IWidgetSettings))
+        assert_that(s, verifiably_provides(IWidgetSettings))
+        
+        s.iframe = True
+        s.courseId = 'Bankai'
+        s.learnerId = 'Ichigo'
+        
+        assert_that(s.get_url_encoding(),
+                    is_('&courseId=Bankai&learnerId=Ichigo&showTitle=true&standalone=true&iframe=true&expand=true&scriptBased=true&divname=&vertical=false&embedded=true'))
+
+        s.dateRangeSettings = DateRangeSettings('z', '2016', '2017', 'strict')
+        s.tagSettings = TagSettings().add('course', 'Bankai')
+        
+        assert_that(s.get_url_encoding(),
+                    starts_with('&courseId=Bankai&learnerId=Ichigo&showTitle=true&standalone=true&iframe=true&expand=true&scriptBased=true&divname=&vertical=false&embedded=true'))

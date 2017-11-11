@@ -475,8 +475,7 @@ class ReportingService(object):
         token = xmldoc.getElementsByTagName('auth')
         if token.length > 0:
             return token[0].childNodes[0].nodeValue
-        else:
-            return None
+        return None
 
     def _get_reportage_service_url(self):
         return self.service.config.serviceurl.replace('EngineWebServices', '')
@@ -539,7 +538,7 @@ class ReportingService(object):
 @interface.implementer(IWidgetSettings)
 class WidgetSettings(object):
 
-    def __init__(self, dateRangeSettings, tagSettings):
+    def __init__(self, dateRangeSettings=None, tagSettings=None):
         self.tagSettings = tagSettings
         self.dateRangeSettings = dateRangeSettings
 
@@ -553,31 +552,28 @@ class WidgetSettings(object):
         self.iframe = False
         self.expand = True
         self.scriptBased = True
-        self.divname = ''
+
+        self.divname = u''
         self.embedded = True
         self.viewall = True
         self.export = True
 
     def get_url_encoding(self):
-        """
-        Returns the widget settings as encoded URL parameters to add to a 
-        Reportage widget URL.
-        """
         widgetUrlStr = ''
-        if self.courseId is not None:
-            widgetUrlStr += '&courseId=' + self.courseId
-        if self.learnerId is not None:
-            widgetUrlStr += '&learnerId=' + self.learnerId
+        if self.courseId:
+            widgetUrlStr += '&courseId=' + quote(self.courseId)
+        if self.learnerId:
+            widgetUrlStr += '&learnerId=' + quote(self.learnerId)
 
-        widgetUrlStr += '&showTitle=' + 'self.showTitle'.lower()
-        widgetUrlStr += '&standalone=' + 'self.standalone'.lower()
+        widgetUrlStr += '&showTitle=' + str(self.showTitle).lower()
+        widgetUrlStr += '&standalone=' + str(self.standalone).lower()
         if self.iframe:
             widgetUrlStr += '&iframe=true'
-        widgetUrlStr += '&expand=' + 'self.expand'.lower()
-        widgetUrlStr += '&scriptBased=' + 'self.scriptBased'.lower()
-        widgetUrlStr += '&divname=' + self.divname
-        widgetUrlStr += '&vertical=' + 'self.vertical'.lower()
-        widgetUrlStr += '&embedded=' + 'self.embedded'.lower()
+        widgetUrlStr += '&expand=' + str(self.expand).lower()
+        widgetUrlStr += '&scriptBased=' + str(self.scriptBased).lower()
+        widgetUrlStr += '&divname=' + quote(self.divname)
+        widgetUrlStr += '&vertical=' + str(self.vertical).lower()
+        widgetUrlStr += '&embedded=' + str(self.embedded).lower()
 
         if self.dateRangeSettings is not None:
             widgetUrlStr += self.dateRangeSettings.get_url_encoding()
@@ -617,6 +613,7 @@ class TagSettings(object):
 
     def add(self, tagType, tagValue):
         self.tags[tagType].add(tagValue)
+        return self
 
     def get_tag_str(self, tagType):
         return ','.join(self.tags[tagType]) + "|_all"
