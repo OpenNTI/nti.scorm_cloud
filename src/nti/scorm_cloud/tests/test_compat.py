@@ -19,8 +19,4 @@ from nti.scorm_cloud.compat import native_
 class TestCompat(unittest.TestCase):
 
     def test_native(self):
-        class Foo(object):
-            def __str__(self):
-                return 'foo'
-
-        assert_that(native_(Foo()), is_('foo'))
+        assert_that(native_(b'foo'), is_('foo'))
