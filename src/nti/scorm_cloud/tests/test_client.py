@@ -31,8 +31,11 @@ from nti.scorm_cloud.client import ScormCloudUtilities
 from nti.scorm_cloud.interfaces import IDebugService
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IUploadService
+from nti.scorm_cloud.interfaces import IReportingService
+from nti.scorm_cloud.interfaces import IInvitationService
 from nti.scorm_cloud.interfaces import IScormCloudService
 from nti.scorm_cloud.interfaces import IRegistrationService
+
 
 class TestClient(unittest.TestCase):
 
@@ -46,25 +49,33 @@ class TestClient(unittest.TestCase):
         assert_that(service, validly_provides(IScormCloudService))
         assert_that(service, verifiably_provides(IScormCloudService))
 
-        service = ScormCloudService.withargs("appid", "secret", 
+        service = ScormCloudService.withargs("appid", "secret",
                                              "http://example.org")
         assert_that(service, validly_provides(IScormCloudService))
 
         cs = service.get_course_service()
         assert_that(cs, validly_provides(ICourseService))
         assert_that(cs, verifiably_provides(ICourseService))
-        
+
         ds = service.get_debug_service()
         assert_that(ds, validly_provides(IDebugService))
         assert_that(ds, verifiably_provides(IDebugService))
-        
+
         us = service.get_upload_service()
         assert_that(us, validly_provides(IUploadService))
         assert_that(us, verifiably_provides(IUploadService))
-        
+
         rs = service.get_registration_service()
         assert_that(rs, validly_provides(IRegistrationService))
         assert_that(rs, verifiably_provides(IRegistrationService))
+
+        rs = service.get_reporting_service()
+        assert_that(rs, validly_provides(IReportingService))
+        assert_that(rs, verifiably_provides(IReportingService))
+
+        isv = service.get_invitation_service()
+        assert_that(isv, validly_provides(IInvitationService))
+        assert_that(isv, verifiably_provides(IInvitationService))
 
     def test_scorm_cloud_utilities(self):
         s = ScormCloudUtilities.get_canonical_origin_string("NextThought&", "Dataserver*",

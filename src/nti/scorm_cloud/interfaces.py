@@ -294,3 +294,129 @@ class IRegistrationService(interface.Interface):
         :param regid: the unique identifier for the registration
         :type regid: str
         """
+
+
+class IInvitationService(interface.Interface):
+    """
+    Service that provides methods for interacting with the invitation service.
+    """
+
+    def create_invitation(courseid, publicInvitation=True, send=True, addresses=None,
+                          emailSubject=None, emailBody=None, creatingUserEmail=None,
+                          registrationCap=None, postbackUrl=None, authType=None, urlName=None,
+                          urlPass=None, resultsFormat=None, async_=False):
+        """
+        Creates an invitation
+
+        :param courseid: the course identifier
+        :param publicInvitation: public invitation flag
+        :param send: Send invitation flag
+        :param addresses: the email address
+        :param emailSubject: the email subject
+        :param emailBody: the email body
+        :param async_: the async flag
+        :type courseid: str
+        :type publicInvitation: bool
+        :type send: bool
+        :type addresses: str
+        :type emailSubject: str
+        :type async_: bool
+        """
+
+    def get_invitation_list(filter_=None, coursefilter=None):
+        """
+        Retrieves a list of invitations
+
+        :param filter_: (optional) invitation filter
+        :param coursefilter: (optional) the course filter
+        """
+
+    def get_invitation_status(invitationId):
+        """
+        Retrieves the status of an invitation
+
+        :param invitationId: the invitation identifier
+        """
+
+    def get_invitation_info(invitationId, detail=None):
+        """
+        Retrieves the information associated with an invitation
+
+        :param invitationId: the invitation identifier
+        :param detail: the detail flag
+        """
+
+    def change_status(invitationId, enable, open_=None):
+        """
+        Change the status of an invitation
+
+        :param invitationId: the invitation identifier
+        :param enable: the enable invitation flag
+        :param open_: the open invitation flag
+        """
+
+
+class IReportingService(interface.Interface):
+    """
+    Service that provides methods for interacting with the Reportage service.
+    """
+
+    def get_reportage_date():
+        """
+        Gets the date/time, according to Reportage.
+        """
+
+    def get_reportage_auth(navperm, allowadmin):
+        """
+        Authenticates against the Reportage application, returning a session
+        string used to make subsequent calls to launchReport.
+
+        :param navperm: the Reportage navigation permissions to assign to the
+            session. If "NONAV", the session will be prevented from navigating
+            away from the original report/widget. "DOWNONLY" allows the user to
+            drill down into additional detail. "FREENAV" allows the user full
+            navigation privileges and the ability to change any reporting
+            parameter.
+        :param allowadmin: if True, the Reportage session will have admin privileges
+        :type navperm: str
+        :type allowadmin: bool
+        """
+
+    def get_report_url(auth, reportUrl):
+        """
+        Returns an authenticated URL that can launch a Reportage session at
+        the specified Reportage entry point.
+
+        :param auth: the Reportage authentication string, as retrieved from
+            get_reportage_auth
+        :param reportUrl -- the URL to the desired Reportage entry point
+        :type reportUrl: str
+        """
+
+    def get_reportage_url(auth):
+        """
+        Returns the authenticated URL to the main Reportage entry point.
+
+        :param auth: the Reportage authentication string, as retrieved from
+            get_reportage_auth
+        """
+
+    def get_course_reportage_url(auth, courseid):
+        """
+        Returns the course reportage url
+
+        :param auth: the Reportage authentication string, as retrieved from
+            get_reportage_auth
+        :param courseid: the course identifier
+        """
+
+    def get_widget_url(auth, widgettype, widgetSettings):
+        """
+        Gets the URL to a specific Reportage widget, using the provided
+        widget settings.
+
+        :param auth: the Reportage authentication string, as retrieved from
+            get_reportage_auth
+        :param widgettype: the widget type desired (for example, learnerSummary)
+        :param widgetSettings: the :class:`IWidgetSettings` object for the widget type
+        """
