@@ -24,16 +24,17 @@ except ImportError:  # pragma: no cover
 
 from zope import interface
 
-from nti.scorm_cloud.compat import native_ 
+from nti.scorm_cloud.compat import native_
 
 from nti.scorm_cloud.interfaces import IDebugService
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IUploadService
 from nti.scorm_cloud.interfaces import IScormCloudService
+from nti.scorm_cloud.interfaces import IRegistrationService
 
 logger = __import__('logging').getLogger(__name__)
-                                         
-                                         
+
+
 def make_utf8(dictionary):
     """
     Encodes all Unicode strings in the dictionary to UTF-8. Converts
@@ -87,7 +88,7 @@ class ScormCloudService(object):
         return cls(config)
 
     @classmethod
-    def withargs(cls, appid, secret, serviceurl, 
+    def withargs(cls, appid, secret, serviceurl,
                  origin='rusticisoftware.pythonlibrary.2.0.0'):
         """
         Named constructor that creates a ScormCloudService with the specified
@@ -284,29 +285,15 @@ class CourseService(object):
         return atts
 
 
+@interface.implementer(IRegistrationService)
 class RegistrationService(object):
-    """
-    Service that provides methods for managing and interacting with
-    registrations on the SCORM Cloud. These methods correspond to the
-    "rustici.registration.*" web service methods.
-    """
 
     def __init__(self, service):
         self.service = service
 
     def create_registration(self, regid, courseid, userid, fname, lname,
-                            email=None, learnerTags=None, courseTags=None, registrationTags=None):
-        """
-        Creates a new registration (an instance of a user taking a course).
-
-        Arguments:
-        regid -- the unique identifier for the registration
-        courseid -- the unique identifier for the course
-        userid -- the unique identifier for the learner
-        fname -- the learner's first name
-        lname -- the learner's last name
-        email -- the learner's email address
-        """
+                            email=None, learnerTags=None, courseTags=None,
+                            registrationTags=None):
         if regid is None:
             regid = str(uuid.uuid1())
         request = self.service.request()
@@ -333,21 +320,6 @@ class RegistrationService(object):
 
     def get_launch_url(self, regid, redirecturl, cssUrl=None, courseTags=None,
                        learnerTags=None, registrationTags=None):
-        """
-        Gets the URL to directly launch the course in a web browser.
-
-        Arguments:
-        regid -- the unique identifier for the registration
-        redirecturl -- the URL to which the SCORM player will redirect upon
-            course exit
-        cssUrl -- the URL to a custom stylesheet
-        courseTags -- comma-delimited list of tags to associate with the
-            launched course
-        learnerTags -- comma-delimited list of tags to associate with the
-            learner launching the course
-        registrationTags -- comma-delimited list of tags to associate with the
-            launched registration
-        """
         request = self.service.request()
         request.parameters['regid'] = regid
         request.parameters['redirecturl'] = redirecturl + '?regid=' + regid
@@ -362,18 +334,7 @@ class RegistrationService(object):
         url = request.construct_url('rustici.registration.launch')
         return url
 
-    def get_registration_list(self, regIdFilterRegex=None,
-                              courseIdFilterRegex=None):
-        """
-        Retrieves a list of registration associated with the configured AppID.
-        Can optionally be filtered by registration or course ID.
-
-        Arguments:
-        regIdFilterRegex -- (optional) the regular expression used to filter the 
-            list by registration ID
-        courseIdFilterRegex -- (optional) the regular expression used to filter
-            the list by course ID
-        """
+    def get_registration_list(self, regIdFilterRegex=None, courseIdFilterRegex=None):
         request = self.service.request()
         if regIdFilterRegex is not None:
             request.parameters['filter'] = regIdFilterRegex
@@ -385,62 +346,27 @@ class RegistrationService(object):
         return regs
 
     def get_registration_result(self, regid, resultsformat):
-        """
-        Gets information about the specified registration.
-
-        Arguments:
-        regid -- the unique identifier for the registration
-        resultsformat -- (optional) can be "course", "activity", or "full" to
-            determine the level of detail returned. The default is "course"
-        """
         request = self.service.request()
         request.parameters['regid'] = regid
         request.parameters['resultsformat'] = resultsformat
         return request.call_service('rustici.registration.getRegistrationResult')
 
     def get_launch_history(self, regid):
-        """
-        Retrieves a list of LaunchInfo objects describing each launch. These
-        LaunchInfo objects do not contain the full launch history log; use
-        get_launch_info to retrieve the full launch information.
-
-        Arguments:
-        regid -- the unique identifier for the registration
-        """
         request = self.service.request()
         request.parameters['regid'] = regid
         return request.call_service('rustici.registration.getLaunchHistory')
 
     def reset_registration(self, regid):
-        """
-        Resets all status data for the specified registration, essentially
-        restarting the course for the associated learner.
-
-        Arguments:
-        regid -- the unique identifier for the registration
-        """
         request = self.service.request()
         request.parameters['regid'] = regid
         return request.call_service('rustici.registration.resetRegistration')
 
     def reset_global_objectives(self, regid):
-        """
-        Clears global objective data for the specified registration.
-
-        Arguments:
-        regid -- the unique identifier for the registration
-        """
         request = self.service.request()
         request.parameters['regid'] = regid
         return request.call_service('rustici.registration.resetGlobalObjectives')
 
     def delete_registration(self, regid):
-        """
-        Deletes the specified registration.
-
-        Arguments:
-        regid -- the unique identifier for the registration
-        """
         request = self.service.request()
         request.parameters['regid'] = regid
         return request.call_service('rustici.registration.deleteRegistration')
@@ -451,9 +377,9 @@ class InvitationService(object):
     def __init__(self, service):
         self.service = service
 
-    def create_invitation(self, courseid, publicInvitation='true', send='true', addresses=None, 
+    def create_invitation(self, courseid, publicInvitation='true', send='true', addresses=None,
                           emailSubject=None, emailBody=None, creatingUserEmail=None,
-                          registrationCap=None, postbackUrl=None, authType=None, urlName=None, 
+                          registrationCap=None, postbackUrl=None, authType=None, urlName=None,
                           urlPass=None, resultsFormat=None, async=False):
         request = self.service.request()
 
@@ -483,8 +409,7 @@ class InvitationService(object):
             request.parameters['resultsFormat'] = resultsFormat
 
         if async:
-            data = request.call_service(
-                'rustici.invitation.createInvitationAsync')
+            data = request.call_service('rustici.invitation.createInvitationAsync')
         else:
             data = request.call_service('rustici.invitation.createInvitation')
 
