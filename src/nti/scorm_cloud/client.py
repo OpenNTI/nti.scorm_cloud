@@ -184,8 +184,7 @@ class UploadService(object):
         if server and tokenid:
             token = UploadToken(server, tokenid)
             return token
-        else:
-            return None
+        return None
 
     def get_upload_url(self, callbackurl):
         token = self.get_upload_token()
@@ -194,8 +193,7 @@ class UploadService(object):
             request.parameters['tokenid'] = token.tokenid
             request.parameters['redirecturl'] = callbackurl
             return request.construct_url('rustici.upload.uploadFile')
-        else:
-            return None
+        return None
 
     def delete_file(self, location):
         locParts = location.split("/")
@@ -215,8 +213,8 @@ class CourseService(object):
         request.parameters['courseid'] = courseid
         request.parameters['path'] = path
         result = request.call_service('rustici.course.importCourse')
-        ir = ImportResult.list_from_result(result)
-        return ir
+        result = ImportResult.list_from_result(result)
+        return result
 
     def delete_course(self, courseid):
         request = self.service.request()
@@ -226,13 +224,13 @@ class CourseService(object):
     def get_assets(self, courseid, path=None):
         request = self.service.request()
         request.parameters['courseid'] = courseid
-        if (path is not None):
+        if path:
             request.parameters['path'] = path
         return request.call_service('rustici.course.getAssets')
 
     def get_course_list(self, courseIdFilterRegex=None):
         request = self.service.request()
-        if courseIdFilterRegex is not None:
+        if courseIdFilterRegex:
             request.parameters['filter'] = courseIdFilterRegex
         result = request.call_service('rustici.course.getCourseList')
         courses = CourseData.list_from_result(result)
@@ -242,7 +240,7 @@ class CourseService(object):
         request = self.service.request()
         request.parameters['courseid'] = courseid
         request.parameters['redirecturl'] = redirecturl
-        if stylesheeturl is not None:
+        if stylesheeturl:
             request.parameters['stylesheet'] = stylesheeturl
         url = request.construct_url('rustici.course.preview')
         logger.info('preview link: ' + url)
@@ -257,11 +255,10 @@ class CourseService(object):
                                 notificationFrameUrl=None):
         request = self.service.request()
         request.parameters['courseid'] = courseid
-        if stylesheetUrl is not None:
+        if stylesheetUrl:
             request.parameters['stylesheet'] = stylesheetUrl
-        if notificationFrameUrl is not None:
+        if notificationFrameUrl:
             request.parameters['notificationframesrc'] = notificationFrameUrl
-
         url = request.construct_url('rustici.course.properties')
         logger.info('properties link: ' + url)
         return url
@@ -270,23 +267,21 @@ class CourseService(object):
         request = self.service.request()
         request.parameters['courseid'] = courseid
         xmldoc = request.call_service('rustici.course.getAttributes')
-
         atts = {}
         attrNodes = xmldoc.getElementsByTagName('attribute')
-        for an in attrNodes:
+        for an in attrNodes or ():
             atts[an.attributes['name'].value] = an.attributes['value'].value
         return atts
 
     def update_attributes(self, courseid, attributePairs):
         request = self.service.request()
         request.parameters['courseid'] = courseid
-        for (key, value) in attributePairs.iteritems():
+        for key, value in attributePairs.items():
             request.parameters[key] = value
         xmldoc = request.call_service('rustici.course.updateAttributes')
-
-        attrNodes = xmldoc.getElementsByTagName('attribute')
         atts = {}
-        for an in attrNodes:
+        attrNodes = xmldoc.getElementsByTagName('attribute')
+        for an in attrNodes or ():
             atts[an.attributes['name'].value] = an.attributes['value'].value
         return atts
 
@@ -309,11 +304,11 @@ class RegistrationService(object):
         request.parameters['fname'] = fname
         request.parameters['lname'] = lname
         request.parameters['learnerid'] = userid
-        if email is not None:
+        if email:
             request.parameters['email'] = email
-        if learnerTags is not None:
+        if learnerTags:
             request.parameters['learnerTags'] = learnerTags
-        if courseTags is not None:
+        if courseTags:
             request.parameters['courseTags'] = courseTags
         if registrationTags is not None:
             request.parameters['registrationTags'] = registrationTags
@@ -329,24 +324,23 @@ class RegistrationService(object):
         request = self.service.request()
         request.parameters['regid'] = regid
         request.parameters['redirecturl'] = redirecturl + '?regid=' + regid
-        if cssUrl is not None:
+        if cssUrl:
             request.parameters['cssurl'] = cssUrl
-        if courseTags is not None:
+        if courseTags:
             request.parameters['coursetags'] = courseTags
-        if learnerTags is not None:
+        if learnerTags:
             request.parameters['learnertags'] = learnerTags
-        if registrationTags is not None:
+        if registrationTags:
             request.parameters['registrationTags'] = registrationTags
         url = request.construct_url('rustici.registration.launch')
         return url
 
     def get_registration_list(self, regIdFilterRegex=None, courseIdFilterRegex=None):
         request = self.service.request()
-        if regIdFilterRegex is not None:
+        if regIdFilterRegex:
             request.parameters['filter'] = regIdFilterRegex
-        if courseIdFilterRegex is not None:
+        if courseIdFilterRegex:
             request.parameters['coursefilter'] = courseIdFilterRegex
-
         result = request.call_service('rustici.registration.getRegistrationList')
         regs = RegistrationData.list_from_result(result)
         return regs
@@ -394,25 +388,25 @@ class InvitationService(object):
         request.parameters['send'] = str(send).lower()
         request.parameters['public'] = str(publicInvitation).lower()
 
-        if addresses is not None:
+        if addresses:
             request.parameters['addresses'] = addresses
-        if emailSubject is not None:
+        if emailSubject:
             request.parameters['emailSubject'] = emailSubject
-        if emailBody is not None:
+        if emailBody:
             request.parameters['emailBody'] = emailBody
-        if creatingUserEmail is not None:
+        if creatingUserEmail:
             request.parameters['creatingUserEmail'] = creatingUserEmail
-        if registrationCap is not None:
+        if registrationCap:
             request.parameters['registrationCap'] = registrationCap
-        if postbackUrl is not None:
+        if postbackUrl:
             request.parameters['postbackUrl'] = postbackUrl
-        if authType is not None:
+        if authType:
             request.parameters['authType'] = authType
-        if urlName is not None:
+        if urlName:
             request.parameters['urlName'] = urlName
-        if urlPass is not None:
+        if urlPass:
             request.parameters['urlPass'] = urlPass
-        if resultsFormat is not None:
+        if resultsFormat:
             request.parameters['resultsFormat'] = resultsFormat
 
         if async_:
