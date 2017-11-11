@@ -15,43 +15,6 @@ from zope.schema import Object
 from zope.schema import TextLine
 
 
-class IScormCloudService(interface.Interface):
-    """
-    Primary cloud service object that provides access to the more specific
-    service areas, like the RegistrationService.
-    """
-
-    def get_course_service():
-        """
-        Retrieves the CourseService.
-        """
-
-    def get_debug_service():
-        """
-        Retrieves the DebugService.
-        """
-
-    def get_registration_service():
-        """
-        Retrieves the RegistrationService.
-        """
-
-    def get_invitation_service():
-        """
-        Retrieves the InvitationService.
-        """
-
-    def get_reporting_service():
-        """
-        Retrieves the ReportingService.
-        """
-
-    def get_upload_service():
-        """
-        Retrieves the UploadService.
-        """
-
-
 class ICourseService(interface.Interface):
     """
     Service that provides methods to manage and interact with courses on the
@@ -213,7 +176,7 @@ class IRegistrationService(interface.Interface):
         :type fname: str
         :type email: str
         :return: return unique identifier for the registration
-        :rtype: email: str
+        :rtype: str
         """
 
     def get_launch_url(regid, redirecturl, cssUrl=None, courseTags=None,
@@ -401,16 +364,16 @@ class ITagSettings(interface.Interface):
 
 class IWidgetSettings(interface.Interface):
 
-    tagSettings = Object(ITagSettings, 
-                         title=u"Tag settings", 
+    tagSettings = Object(ITagSettings,
+                         title=u"Tag settings",
                          required=False)
-    
-    dateRangeSettings = Object(ITagSettings, title=u"Tag settings", 
+
+    dateRangeSettings = Object(ITagSettings, title=u"Tag settings",
                                required=False)
-    
+
     courseId = TextLine(title=u"The course identifier", required=False)
     learnerId = TextLine(title=u"The learner identifier", required=False)
-    
+
     showTitle = Bool(title=u"Show title flag", default=True)
     vertical = Bool(title=u"Show vertical flag", default=False)
     public = Bool(title=u"Public flag", default=True)
@@ -418,7 +381,7 @@ class IWidgetSettings(interface.Interface):
     iframe = Bool(title=u"iframe flag", default=False)
     expand = Bool(title=u"Expand flag", default=True)
     scriptBased = Bool(title=u"Script based flag", default=True)
-    
+
     divname = TextLine(title=u"Div name", default=u'')
 
     embedded = Bool(title=u"Embedded flag", default=True)
@@ -495,4 +458,59 @@ class IReportingService(interface.Interface):
             get_reportage_auth
         :param widgettype: the widget type desired (for example, learnerSummary)
         :param widgetSettings: the :class:`IWidgetSettings` object for the widget type
+        """
+
+
+class IScormCloudService(interface.Interface):
+    """
+    Primary cloud service object that provides access to the more specific
+    service areas, like the RegistrationService.
+    """
+
+    def get_course_service():
+        """
+        Retrieves the CourseService.
+
+        :return: return a new course service object
+        :rtype: :class:`.ICourseService`
+        """
+
+    def get_debug_service():
+        """
+        Retrieves the DebugService.
+
+        :return: return a new debug service object
+        :rtype: :class:`.IDebugService`
+        """
+
+    def get_registration_service():
+        """
+        Retrieves the RegistrationService.
+
+        :return: return a new registration service object
+        :rtype: :class:`.IRegistrationService`
+        """
+
+    def get_invitation_service():
+        """
+        Retrieves the InvitationService.
+
+        :return: return a new invitation service object
+        :rtype: :class:`.IInvitationService`
+        """
+
+    def get_reporting_service():
+        """
+        Retrieves the ReportingService.
+
+        :return: return a new reporting service object
+        :rtype: :class:`.IReportingService`
+        """
+
+    def get_upload_service():
+        """
+        Retrieves the UploadService.
+
+        :return: return a new upload service object
+        :rtype: :class:`.IUploadService`
         """
