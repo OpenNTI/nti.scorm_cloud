@@ -118,10 +118,10 @@ class TestSettings(unittest.TestCase):
         assert_that(d, verifiably_provides(IDateRangeSettings))
         assert_that(d.get_url_encoding(),
                     is_('&dateRangeType=c&dateRangeStart=2016&dateRangeEnd=2017&dateCriteria=strict'))
-        
+
         d = DateRangeSettings('z', '2016', '2017', 'strict')
         assert_that(d.get_url_encoding(),
-                    is_('&dateRangeType=z&dateCriteria=strict'))         
+                    is_('&dateRangeType=z&dateCriteria=strict'))
 
     def test_tags(self):
         s = TagSettings()
@@ -138,22 +138,21 @@ class TestSettings(unittest.TestCase):
                     is_('Rukia,Ichigo'))
         assert_that(s.get_url_encoding(),
                     is_('&courseTags=Bankai%7C_all&viewCourseTagGroups=Bankai&learnerTags=Rukia%2CIchigo%7C_all&viewLearnerTagGroups=Rukia%2CIchigo&registrationTags=SoulSociety%7C_all&viewRegistrationTagGroups=SoulSociety'))
-        
 
     def test_widget(self):
         s = WidgetSettings()
         assert_that(s, validly_provides(IWidgetSettings))
         assert_that(s, verifiably_provides(IWidgetSettings))
-        
+
         s.iframe = True
         s.courseId = 'Bankai'
         s.learnerId = 'Ichigo'
-        
+
         assert_that(s.get_url_encoding(),
                     is_('&courseId=Bankai&learnerId=Ichigo&showTitle=true&standalone=true&iframe=true&expand=true&scriptBased=true&divname=&vertical=false&embedded=true'))
 
         s.dateRangeSettings = DateRangeSettings('z', '2016', '2017', 'strict')
         s.tagSettings = TagSettings().add('course', 'Bankai')
-        
+
         assert_that(s.get_url_encoding(),
                     starts_with('&courseId=Bankai&learnerId=Ichigo&showTitle=true&standalone=true&iframe=true&expand=true&scriptBased=true&divname=&vertical=false&embedded=true'))
