@@ -55,6 +55,7 @@ setup(
         'six',
         'zope.component',
         'zope.interface',
+        'zope.schema',
         'zope.security',
     ],
     extras_require={
