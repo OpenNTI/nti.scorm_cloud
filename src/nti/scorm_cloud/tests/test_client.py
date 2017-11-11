@@ -22,14 +22,18 @@ import six
 import unittest
 
 from nti.scorm_cloud.client import make_utf8
+from nti.scorm_cloud.client import TagSettings
 from nti.scorm_cloud.client import Configuration
+from nti.scorm_cloud.client import DateRangeSettings
 from nti.scorm_cloud.client import ScormCloudService
 from nti.scorm_cloud.client import ScormCloudUtilities
 
+from nti.scorm_cloud.interfaces import ITagSettings
 from nti.scorm_cloud.interfaces import IDebugService
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IUploadService
 from nti.scorm_cloud.interfaces import IReportingService
+from nti.scorm_cloud.interfaces import IDateRangeSettings
 from nti.scorm_cloud.interfaces import IInvitationService
 from nti.scorm_cloud.interfaces import IScormCloudService
 from nti.scorm_cloud.interfaces import IRegistrationService
@@ -99,3 +103,35 @@ class TestClient(unittest.TestCase):
                     has_entries('Bleach', 'Ichigo',
                                 'Shikai', is_(instance_of(six.string_types)),
                                 'Bankai', is_(instance_of(six.string_types))))
+
+
+class TestSettings(unittest.TestCase):
+
+    layer = SharedConfiguringTestLayer
+
+    def test_daterange(self):
+        d = DateRangeSettings('selection', '2016', '2017', 'strict')
+        assert_that(d, validly_provides(IDateRangeSettings))
+        assert_that(d, verifiably_provides(IDateRangeSettings))
+        assert_that(d.get_url_encoding(),
+                    is_('&dateRangeType=c&dateRangeStart=2016&dateRangeEnd=2017&dateCriteria=strict'))
+        
+        d = DateRangeSettings('z', '2016', '2017', 'strict')
+        assert_that(d.get_url_encoding(),
+                    is_('&dateRangeType=z&dateCriteria=strict'))         
+
+    def test_tags(self):
+        s = TagSettings()
+        assert_that(s, validly_provides(ITagSettings))
+        assert_that(s, verifiably_provides(ITagSettings))
+
+        s.add('course', 'Bankai')
+        s.add('learner', 'Ichigo')
+        s.add('learner', 'Rukia')
+        s.add('registration', 'SoulSociety')
+        assert_that(s.get_tag_str('course'),
+                    is_('Bankai|_all'))
+        assert_that(s.get_view_tag_str('learner'),
+                    is_('Rukia,Ichigo'))
+        assert_that(s.get_url_encoding(),
+                    is_('&courseTags=Bankai%7C_all&viewCourseTagGroups=Bankai&learnerTags=Rukia%2CIchigo%7C_all&viewLearnerTagGroups=Rukia%2CIchigo&registrationTags=SoulSociety%7C_all&viewRegistrationTagGroups=SoulSociety'))

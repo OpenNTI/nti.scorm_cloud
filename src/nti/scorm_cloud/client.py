@@ -15,6 +15,7 @@ from hashlib import md5
 from xml.dom import minidom
 
 from six import text_type
+from six.moves.urllib_parse import quote
 from six.moves.urllib_parse import quote_plus
 
 try:
@@ -26,10 +27,13 @@ from zope import interface
 
 from nti.scorm_cloud.compat import native_
 
+from nti.scorm_cloud.interfaces import ITagSettings
 from nti.scorm_cloud.interfaces import IDebugService
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IUploadService
+from nti.scorm_cloud.interfaces import IWidgetSettings
 from nti.scorm_cloud.interfaces import IReportingService
+from nti.scorm_cloud.interfaces import IDateRangeSettings
 from nti.scorm_cloud.interfaces import IInvitationService
 from nti.scorm_cloud.interfaces import IScormCloudService
 from nti.scorm_cloud.interfaces import IRegistrationService
@@ -538,11 +542,12 @@ class ReportingService(object):
         return reportUrl
 
 
+@interface.implementer(IWidgetSettings)
 class WidgetSettings(object):
 
     def __init__(self, dateRangeSettings, tagSettings):
-        self.dateRangeSettings = dateRangeSettings
         self.tagSettings = tagSettings
+        self.dateRangeSettings = dateRangeSettings
 
         self.courseId = None
         self.learnerId = None
@@ -589,56 +594,55 @@ class WidgetSettings(object):
         return widgetUrlStr
 
 
+@interface.implementer(IDateRangeSettings)
 class DateRangeSettings(object):
 
-    def __init__(self, dateRangeType, dateRangeStart,
-                 dateRangeEnd, dateCriteria):
-        self.dateRangeType = dateRangeType
-        self.dateRangeStart = dateRangeStart
+    def __init__(self, dateRangeType, dateRangeStart, dateRangeEnd, dateCriteria):
         self.dateRangeEnd = dateRangeEnd
         self.dateCriteria = dateCriteria
+        self.dateRangeType = dateRangeType
+        self.dateRangeStart = dateRangeStart
 
     def get_url_encoding(self):
-        """
-        Returns the DateRangeSettings as encoded URL parameters to add to a
-        Reportage widget URL.
-        """
-        dateRangeStr = ''
+        result = ''
         if self.dateRangeType == 'selection':
-            dateRangeStr += '&dateRangeType=c'
-            dateRangeStr += '&dateRangeStart=' + self.dateRangeStart
-            dateRangeStr += '&dateRangeEnd=' + self.dateRangeEnd
+            result += '&dateRangeType=c'
+            result += '&dateRangeStart=' + quote(self.dateRangeStart)
+            result += '&dateRangeEnd=' + quote(self.dateRangeEnd)
         else:
-            dateRangeStr += '&dateRangeType=' + self.dateRangeType
+            result += '&dateRangeType=' + quote(self.dateRangeType)
+        result += '&dateCriteria=' + quote(self.dateCriteria)
+        return result
 
-        dateRangeStr += '&dateCriteria=' + self.dateCriteria
-        return dateRangeStr
 
-
+@interface.implementer(ITagSettings)
 class TagSettings(object):
+
     def __init__(self):
-        self.tags = {'course': [], 'learner': [], 'registration': []}
+        self.tags = {'course': set(), 'learner': set(), 'registration': set()}
 
     def add(self, tagType, tagValue):
-        self.tags[tagType].append(tagValue)
+        self.tags[tagType].add(tagValue)
 
     def get_tag_str(self, tagType):
-        return ','.join(set(self.tags[tagType])) + "|_all"
+        return ','.join(self.tags[tagType]) + "|_all"
 
     def get_view_tag_str(self, tagType):
-        return ','.join(set(self.tags[tagType]))
+        return ','.join(self.tags[tagType])
 
     def get_url_encoding(self):
-        tagUrlStr = ''
+        result = []
         for k in self.tags.keys():
-            if len(set(self.tags[k])) > 0:
-                tagUrlStr += '&' + k + 'Tags=' + self.get_tag_str(k)
-                tagUrlStr += ('&view' + k.capitalize() + 'TagGroups=' +
-                              self.get_view_tag_str(k))
-        return tagUrlStr
+            if self.tags[k]:
+                result.extend(('&', k))
+                result.extend(('Tags=', quote(self.get_tag_str(k))))
+                result.extend(('&view', k.capitalize()))
+                result.extend(('TagGroups=', quote(self.get_view_tag_str(k))))
+        return ''.join(result)
 
 
 class ScormCloudError(Exception):
+
     def __init__(self, msg, json=None):
         self.msg = msg
         self.json = json
@@ -712,7 +716,6 @@ class CourseData(object):
 
 
 class UploadToken(object):
-
     server = ""
     tokenid = ""
 
@@ -755,9 +758,9 @@ class ServiceRequest(object):
     """
 
     def __init__(self, service):
+        self.file_ = None
         self.service = service
         self.parameters = dict()
-        self.file_ = None
 
     def call_service(self, method, serviceurl=None):
         """

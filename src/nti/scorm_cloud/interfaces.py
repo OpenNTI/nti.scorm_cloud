@@ -356,6 +356,54 @@ class IInvitationService(interface.Interface):
         """
 
 
+class IDateRangeSettings(interface.Interface):
+
+    def get_url_encoding():
+        """
+        Returns the DateRangeSettings as encoded URL parameters to add to a
+        Reportage widget URL.
+        """
+
+
+class ITagSettings(interface.Interface):
+
+    def add(tagType, tagValue):
+        """
+        Add a tag
+
+        :param tagType: the tag type
+        :param tagValue: the tag value
+        """
+
+    def get_tag_str(tagType):
+        """
+        Return the tagType string
+
+        :param tagType: the tag type
+        """
+
+    def get_view_tag_str(tagType):
+        """
+        Return the tagType view string
+
+        :param tagType: the tag type
+        """
+
+    def get_url_encoding():
+        """
+        Return the TagSettings as encoded URL parameters
+        """
+
+
+class IWidgetSettings(interface.Interface):
+
+    def get_url_encoding():
+        """
+        Returns the widget settings as encoded URL parameters to add to a 
+        Reportage widget URL.
+        """
+
+
 class IReportingService(interface.Interface):
     """
     Service that provides methods for interacting with the Reportage service.
