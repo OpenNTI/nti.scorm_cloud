@@ -314,7 +314,7 @@ class RegistrationService(object):
             request.parameters['registrationTags'] = registrationTags
         xmldoc = request.call_service('rustici.registration.createRegistration')
         successNodes = xmldoc.getElementsByTagName('success')
-        if successNodes.length == 0:
+        if successNodes is None or successNodes.length == 0:
             raise ScormCloudError("Create Registration failed.  " +
                                   xmldoc.err.attributes['msg'])
         return regid
