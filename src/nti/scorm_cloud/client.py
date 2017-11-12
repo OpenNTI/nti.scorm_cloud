@@ -880,7 +880,6 @@ class ScormCloudUtilities(object):
         URL of the host service ends with /api and processes the given URL to
         meet this assumption.
 
-        Arguments:
         :param url: the URL for the Cloud service, typically as entered by a user
             in their configuration
         :type url: str
