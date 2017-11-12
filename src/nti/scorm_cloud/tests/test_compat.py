@@ -24,3 +24,4 @@ class TestCompat(unittest.TestCase):
         
     def test_bytes(self):
         assert_that(bytes_(u'foo'), is_(b'foo'))
+        assert_that(bytes_(b'foo'), is_(b'foo'))
