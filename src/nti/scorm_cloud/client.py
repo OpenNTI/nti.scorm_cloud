@@ -25,6 +25,7 @@ except ImportError:  # pragma: no cover
 
 from zope import interface
 
+from nti.scorm_cloud.compat import bytes_
 from nti.scorm_cloud.compat import native_
 
 from nti.scorm_cloud.interfaces import ITagSettings
@@ -66,8 +67,8 @@ class Configuration(object):
     def __init__(self, appid, secret, serviceurl,
                  origin='rusticisoftware.pythonlibrary.2.0.0'):
         self.appid = appid
-        self.secret = secret
         self.origin = origin
+        self.secret = bytes_(secret)
         self.serviceurl = serviceurl
 
     def __repr__(self):
@@ -840,7 +841,7 @@ class ServiceRequest(object):
         for key in sorted(dictionary.keys(), key=str.lower):
             signing.append(key + dictionary[key])
             values.append(key + '=' + quote_plus(dictionary[key]))
-        signing = ''.join(signing)
+        signing = bytes_(''.join(signing))
         values.append('sig=' + md5(secret + signing).hexdigest())
         return '&'.join(values)
 
