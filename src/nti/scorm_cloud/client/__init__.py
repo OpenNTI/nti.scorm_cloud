@@ -32,8 +32,11 @@ from nti.scorm_cloud.client.config import Configuration
 
 from nti.scorm_cloud.client.debug import DebugService
 
+from nti.scorm_cloud.client.invitation import InvitationService
+
 from nti.scorm_cloud.client.request import make_utf8
 from nti.scorm_cloud.client.request import ServiceRequest
+from nti.scorm_cloud.client.request import ScormCloudError
 from nti.scorm_cloud.client.request import ScormCloudUtilities
 
 from nti.scorm_cloud.interfaces import ITagSettings
@@ -43,7 +46,6 @@ from nti.scorm_cloud.interfaces import IUploadService
 from nti.scorm_cloud.interfaces import IWidgetSettings
 from nti.scorm_cloud.interfaces import IReportingService
 from nti.scorm_cloud.interfaces import IDateRangeSettings
-from nti.scorm_cloud.interfaces import IInvitationService
 from nti.scorm_cloud.interfaces import IScormCloudService
 from nti.scorm_cloud.interfaces import IRegistrationService
 
@@ -327,83 +329,6 @@ class RegistrationService(object):
         return request.call_service('rustici.registration.deleteRegistration')
 
 
-@interface.implementer(IInvitationService)
-class InvitationService(object):
-
-    def __init__(self, service):
-        self.service = service
-
-    def create_invitation(self, courseid, publicInvitation=True, send=True, addresses=None,
-                          emailSubject=None, emailBody=None, creatingUserEmail=None,
-                          registrationCap=None, postbackUrl=None, authType=None, urlName=None,
-                          urlPass=None, resultsFormat=None, async_=False):
-        request = self.service.request()
-
-        request.parameters['courseid'] = courseid
-        request.parameters['send'] = str(send).lower()
-        request.parameters['public'] = str(publicInvitation).lower()
-
-        if addresses:
-            request.parameters['addresses'] = addresses
-        if emailSubject:
-            request.parameters['emailSubject'] = emailSubject
-        if emailBody:
-            request.parameters['emailBody'] = emailBody
-        if creatingUserEmail:
-            request.parameters['creatingUserEmail'] = creatingUserEmail
-        if registrationCap:
-            request.parameters['registrationCap'] = registrationCap
-        if postbackUrl:
-            request.parameters['postbackUrl'] = postbackUrl
-        if authType:
-            request.parameters['authType'] = authType
-        if urlName:
-            request.parameters['urlName'] = urlName
-        if urlPass:
-            request.parameters['urlPass'] = urlPass
-        if resultsFormat:
-            request.parameters['resultsFormat'] = resultsFormat
-
-        if async_:
-            data = request.call_service('rustici.invitation.createInvitationAsync')
-        else:
-            data = request.call_service('rustici.invitation.createInvitation')
-
-        return data
-
-    def get_invitation_list(self, filter_=None, coursefilter=None):
-        request = self.service.request()
-        if filter_ is not None:
-            request.parameters['filter'] = filter_
-        if coursefilter is not None:
-            request.parameters['coursefilter'] = coursefilter
-        data = request.call_service('rustici.invitation.getInvitationList')
-        return data
-
-    def get_invitation_status(self, invitationId):
-        request = self.service.request()
-        request.parameters['invitationId'] = invitationId
-        data = request.call_service('rustici.invitation.getInvitationStatus')
-        return data
-
-    def get_invitation_info(self, invitationId, detail=None):
-        request = self.service.request()
-        request.parameters['invitationId'] = invitationId
-        if detail is not None:
-            request.parameters['detail'] = detail
-        data = request.call_service('rustici.invitation.getInvitationInfo')
-        return data
-
-    def change_status(self, invitationId, enable, open_=None):
-        request = self.service.request()
-        request.parameters['invitationId'] = invitationId
-        request.parameters['enable'] = enable
-        if open_ is not None:
-            request.parameters['open'] = open_
-        data = request.call_service('rustici.invitation.changeStatus')
-        return data
-
-
 @interface.implementer(IReportingService)
 class ReportingService(object):
 
@@ -585,16 +510,6 @@ class TagSettings(object):
                 result.extend(('&view', k.capitalize()))
                 result.extend(('TagGroups=', quote(self.get_view_tag_str(k))))
         return ''.join(result)
-
-
-class ScormCloudError(Exception):
-
-    def __init__(self, msg, json=None):
-        self.msg = msg
-        self.json = json
-
-    def __str__(self):
-        return repr(self.msg)
 
 
 class ImportResult(object):

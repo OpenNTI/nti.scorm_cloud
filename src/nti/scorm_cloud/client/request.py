@@ -41,6 +41,14 @@ def make_utf8(dictionary):
     return result
 
 
+class ScormCloudError(Exception):
+
+    def __init__(self, msg, code=None, json=None):
+        Exception.__init__(self, msg)
+        self.code = code
+        self.json = json
+
+
 class ServiceRequest(object):
     """
     Helper object that handles the details of web service URLs and parameter
@@ -90,9 +98,7 @@ class ServiceRequest(object):
         # 'applib': 'python'}
         for k, v in self.parameters.items():
             params[k] = v
-        url = self.service.config.serviceurl
-        if serviceurl is not None:
-            url = serviceurl
+        url = serviceurl or self.service.config.serviceurl
         url = (
             ScormCloudUtilities.clean_cloud_host_url(url)
             + '?'
@@ -111,9 +117,9 @@ class ServiceRequest(object):
         rsp = xmldoc.documentElement
         if rsp.attributes['stat'].value != 'ok':
             err = rsp.firstChild
-            raise Exception('SCORM Cloud Error: %s - %s' %
-                            (err.attributes['code'].value,
-                             err.attributes['msg'].value))
+            raise ScormCloudError('SCORM Cloud Error: %s - %s' %
+                                  (err.attributes['code'].value,
+                                   err.attributes['msg'].value))
         return xmldoc
 
     def session(self):

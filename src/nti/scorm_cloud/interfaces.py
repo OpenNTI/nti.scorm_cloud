@@ -333,58 +333,128 @@ class IInvitationService(interface.Interface):
     Service that provides methods for interacting with the invitation service.
     """
 
-    def create_invitation(courseid, publicInvitation=True, send=True, addresses=None,
-                          emailSubject=None, emailBody=None, creatingUserEmail=None,
-                          registrationCap=None, postbackUrl=None, authType=None, urlName=None,
-                          urlPass=None, resultsFormat=None, async_=False):
-        """
-        Creates an invitation
+    service = Object(IScormCloudService, 
+                     title=u"The scorm cloud service")
 
-        :param courseid: the course identifier
-        :param publicInvitation: public invitation flag
-        :param send: Send invitation flag
-        :param addresses: the email address
-        :param emailSubject: the email subject
-        :param emailBody: the email body
-        :param async_: the async flag
+    def createInvitation(courseid, public=True, send=True, addresses=None,
+                         emailSubject=None, emailBody=None, creatingUserEmail=None,
+                         registrationCap=None, postbackurl=None, authtype=None, urlname=None,
+                         urlpass=None, resultsformat=None, expirationdate=None):
+        """
+        Creates a new invitation in your SCORM Cloud account, customized with the given parameters,
+        and will return the id for the newly created invitation.
+
+        :param courseid: the course to which this invitation is being created
+        :param public: whether the invitation is public or private
+        :param send: whether the private invitations will be emailed to the provided addresses or not.
+        :param addresses: a comma separated list of email addresse
+        :param emailSubject: the subject of the email
+        :param emailBody: the test that will be sent in the body
+        :param creatingUserEmail: the email of the user who is creating the invitation.
+        :param registrationCap: limit of public invitation registrations to allow
+        :param postbackurl: specifies a URL for which to post activity and status data in real time as the course is completed
+        :param authtype: specify how to authorize against the given postbackurl, can be “form” or “httpbasic”
+        :param urlname: an optional login name to be used for credentials when posting to the URL specified in postbackurl
+        :param urlpass: credentials for the postbackurl
+        :param resultsformat: level of detail in the information that is posted back while the course is being taken. 
+            It may be one of three values: “course” (course summary), “activity” (activity summary), or “full” (full detail)
+        :param expirationdate: the date this invitation will expire (formatted yyyyMMddHHmmss in UTC time)
         :type courseid: str
-        :type publicInvitation: bool
+        :type public: bool
         :type send: bool
         :type addresses: str
         :type emailSubject: str
-        :type async_: bool
+        :type emailBody: str
+        :type registrationCap: int
+        :type postbackurl: str
+        :type authtype: str
+        :type urlname: str
+        :type urlpass: str
+        :type resultsformat: str
+        :type expirationdate: str
         """
 
-    def get_invitation_list(filter_=None, coursefilter=None):
+    def createInvitationAsync(courseid, public=True, send=True, addresses=None,
+                              emailSubject=None, emailBody=None, creatingUserEmail=None,
+                              registrationCap=None, postbackurl=None, authtype=None, urlname=None,
+                              urlpass=None, resultsformat=None, expirationdate=None):
         """
-        Retrieves a list of invitations
+        Creates a new invitation in your SCORM Cloud account, customized with the given parameters,
+        and will return the id for the newly created invitation. The method will still return the invitation Id, 
+        but the job of creating the registrations and sending the invitation email may not yet be complete.
 
-        :param filter_: (optional) invitation filter
-        :param coursefilter: (optional) the course filter
+        :param courseid: the course to which this invitation is being created
+        :param public: whether the invitation is public or private
+        :param send: whether the private invitations will be emailed to the provided addresses or not.
+        :param addresses: a comma separated list of email addresse
+        :param emailSubject: the subject of the email
+        :param emailBody: the test that will be sent in the body
+        :param creatingUserEmail: the email of the user who is creating the invitation.
+        :param registrationCap: limit of public invitation registrations to allow
+        :param postbackurl: specifies a URL for which to post activity and status data in real time as the course is completed
+        :param authtype: specify how to authorize against the given postbackurl, can be “form” or “httpbasic”
+        :param urlname: an optional login name to be used for credentials when posting to the URL specified in postbackurl
+        :param urlpass: credentials for the postbackurl
+        :param resultsformat: level of detail in the information that is posted back while the course is being taken. 
+            It may be one of three values: “course” (course summary), “activity” (activity summary), or “full” (full detail)
+        :param expirationdate: the date this invitation will expire (formatted yyyyMMddHHmmss in UTC time)
+        :type courseid: str
+        :type public: bool
+        :type send: bool
+        :type addresses: str
+        :type emailSubject: str
+        :type emailBody: str
+        :type registrationCap: int
+        :type postbackurl: str
+        :type authtype: str
+        :type urlname: str
+        :type urlpass: str
+        :type resultsformat: str
+        :type expirationdate: str
         """
 
-    def get_invitation_status(invitationId):
+    def getInvitationStatus(invitationId):
         """
         Retrieves the status of an invitation
 
         :param invitationId: the invitation identifier
         """
 
-    def get_invitation_info(invitationId, detail=None):
+    def getInvitationInfo(invitationId, detail=True):
         """
         Retrieves the information associated with an invitation
 
         :param invitationId: the invitation identifier
-        :param detail: the detail flag
+        :param detail: whether to return registration summary info 
+        :type invitationId: str
+        :type detail: bool
         """
 
-    def change_status(invitationId, enable, open_=None):
+    def getInvitationList(filter_=None, coursefilter=None):
+        """
+        Retrieves a list of invitations
+
+        :param filter_: a regular expression that will be used to filter the list of invitations
+        :param coursefilter: A regular express that will be used to filter the list of invitations. 
+            Specifically only those invitations that are associated with courses whose courseid’s match 
+            the given expression will be returned in the list
+        :type filter_: str
+        :type coursefilter: str
+        """
+
+    def changeStatus(invitationId, enable, open_=True, expirationdate=None):
         """
         Change the status of an invitation
 
         :param invitationId: the invitation identifier
-        :param enable: the enable invitation flag
-        :param open_: the open invitation flag
+        :param enable: whether to set the invitation to enabled (launchable) or not.
+        :param open_:  whether a public invitation is still available for learner’s to
+            create new registrations.
+        :param expirationdate: the date this invitation will expire and can not be launched
+        :type invitationId: str
+        :type enable: bool
+        :type open_: bool
+        :type expirationdate: str
         """
 
 

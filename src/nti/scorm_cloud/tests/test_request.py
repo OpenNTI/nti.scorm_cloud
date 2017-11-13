@@ -16,13 +16,17 @@ from hamcrest import instance_of
 import six
 import unittest
 
+from requests import Session
+
 from nti.scorm_cloud.client.request import make_utf8
+from nti.scorm_cloud.client.request import ServiceRequest
+from nti.scorm_cloud.client.request import ScormCloudError
 from nti.scorm_cloud.client.request import ScormCloudUtilities
 
 from nti.scorm_cloud.tests import SharedConfiguringTestLayer
 
 
-class TestClient(unittest.TestCase):
+class TestRequest(unittest.TestCase):
 
     layer = SharedConfiguringTestLayer
 
@@ -48,3 +52,14 @@ class TestClient(unittest.TestCase):
                     has_entries('Bleach', 'Ichigo',
                                 'Shikai', is_(instance_of(six.string_types)),
                                 'Bankai', is_(instance_of(six.string_types))))
+        
+    def test_coverage(self):
+        service = ServiceRequest(None)
+        
+        # get xml with error
+        raw = '<rsp stat="failed"><error code="500" msg="server error"/></rsp>'
+        with self.assertRaises(ScormCloudError):
+            service.get_xml(raw)
+        
+        # get a requests session
+        assert_that(service.session(), is_(Session))
