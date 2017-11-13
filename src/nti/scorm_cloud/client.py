@@ -163,6 +163,18 @@ class DebugService(object):
             return xmldoc.documentElement.attributes['stat'].value == 'ok'
         except Exception:
             return False
+    authPing = authping
+        
+    def gettime(self):
+        try:
+            xmldoc = self.service.make_call('rustici.debug.getTime')
+            rsp = xmldoc.documentElement
+            if rsp.attributes['stat'].value != 'ok':
+                return rsp.firstChild.firstChild.nodeValue
+        except Exception:
+            pass
+        return None
+    getTime = gettime
 
 
 @interface.implementer(IUploadService)
