@@ -28,6 +28,14 @@ from zope import interface
 from nti.scorm_cloud.compat import bytes_
 from nti.scorm_cloud.compat import native_
 
+from nti.scorm_cloud.client.config import Configuration
+
+from nti.scorm_cloud.client.debug import DebugService
+
+from nti.scorm_cloud.client.request import make_utf8
+from nti.scorm_cloud.client.request import ServiceRequest
+from nti.scorm_cloud.client.request import ScormCloudUtilities
+
 from nti.scorm_cloud.interfaces import ITagSettings
 from nti.scorm_cloud.interfaces import IDebugService
 from nti.scorm_cloud.interfaces import ICourseService
@@ -40,39 +48,6 @@ from nti.scorm_cloud.interfaces import IScormCloudService
 from nti.scorm_cloud.interfaces import IRegistrationService
 
 logger = __import__('logging').getLogger(__name__)
-
-
-def make_utf8(dictionary):
-    """
-    Encodes all Unicode strings in the dictionary to UTF-8. Converts
-    all other objects to regular strings.
-
-    Returns a copy of the dictionary, doesn't touch the original.
-    """
-    result = {}
-    for key, value in dictionary.items():
-        if isinstance(value, text_type):
-            value = native_(value, 'utf-8')
-        else:
-            value = str(value)
-        result[key] = value
-    return result
-
-
-class Configuration(object):
-    """
-    Stores the configuration elements required by the API.
-    """
-
-    def __init__(self, appid, secret, serviceurl,
-                 origin='rusticisoftware.pythonlibrary.2.0.0'):
-        self.appid = appid
-        self.origin = origin
-        self.secret = bytes_(secret)
-        self.serviceurl = serviceurl
-
-    def __repr__(self):
-        return 'Configuration for AppID %s from origin %s' % (self.appid, self.origin)
 
 
 @interface.implementer(IScormCloudService)
@@ -142,36 +117,6 @@ class ScormCloudService(object):
         parameters).
         """
         return self.request().call_service(method)
-
-
-@interface.implementer(IDebugService)
-class DebugService(object):
-
-    def __init__(self, service):
-        self.service = service
-
-    def ping(self):
-        try:
-            xmldoc = self.service.make_call('rustici.debug.ping')
-            return xmldoc.documentElement.attributes['stat'].value == 'ok'
-        except Exception:
-            return False
-
-    def authping(self):
-        try:
-            xmldoc = self.service.make_call('rustici.debug.authPing')
-            return xmldoc.documentElement.attributes['stat'].value == 'ok'
-        except Exception:
-            return False
-    authPing = authping
-        
-    def gettime(self):
-        try:
-            xmldoc = self.service.make_call('rustici.debug.getTime')
-            return xmldoc.documentElement.firstChild.firstChild.nodeValue
-        except Exception:
-            return None
-    getTime = gettime
 
 
 @interface.implementer(IUploadService)
@@ -748,153 +693,3 @@ class RegistrationData(object):
         for reg in regs:
             allResults.append(cls(reg))
         return allResults
-
-
-class ServiceRequest(object):
-    """
-    Helper object that handles the details of web service URLs and parameter
-    encoding and signing. Set the web service method parameters on the 
-    parameters attribute of the ServiceRequest object and then call
-    call_service with the method name to make a service request.
-    """
-
-    def __init__(self, service):
-        self.file_ = None
-        self.service = service
-        self.parameters = dict()
-
-    def call_service(self, method, serviceurl=None):
-        """
-        Calls the specified web service method using any parameters set on the
-        ServiceRequest.
-
-        Arguments:
-        method -- the full name of the web service method to call.
-            For example: rustici.registration.createRegistration
-        serviceurl -- (optional) used to override the service host URL for a
-            single call
-        """
-        postparams = None
-        # if self.file_ is not None:
-        # TODO: Implement file upload
-        url = self.construct_url(method, serviceurl)
-        rawresponse = self.send_post(url, postparams)
-        response = self.get_xml(rawresponse)
-        return response
-
-    def construct_url(self, method, serviceurl=None):
-        """
-        Gets the full URL for a Cloud web service call, including parameters.
-
-        Arguments:
-        method -- the full name of the web service method to call.
-            For example: rustici.registration.createRegistration
-        serviceurl -- (optional) used to override the service host URL for a
-            single call
-        """
-        params = {'method': method}
-
-        # 'appid': self.service.config.appid,
-        # 'origin': self.service.config.origin,
-        # 'ts': datetime.datetime.utcnow().strftime('yyyyMMddHHmmss'),
-        # 'applib': 'python'}
-        for k, v in self.parameters.items():
-            params[k] = v
-        url = self.service.config.serviceurl
-        if serviceurl is not None:
-            url = serviceurl
-        url = (
-            ScormCloudUtilities.clean_cloud_host_url(url) + '?' + self._encode_and_sign(params)
-        )
-        return url
-
-    def get_xml(self, raw):
-        """
-        Parses the raw response string as XML and asserts that there was no
-        error in the result.
-
-        Arguments:
-        raw -- the raw response string from an API method call
-        """
-        xmldoc = minidom.parseString(raw)
-        rsp = xmldoc.documentElement
-        if rsp.attributes['stat'].value != 'ok':
-            err = rsp.firstChild
-            raise Exception('SCORM Cloud Error: %s - %s' %
-                            (err.attributes['code'].value,
-                             err.attributes['msg'].value))
-        return xmldoc
-
-    def send_post(self, url, postparams):
-        cloudsocket = urlopen(url, postparams)
-        reply = cloudsocket.read()
-        cloudsocket.close()
-        return reply
-
-    def _encode_and_sign(self, dictionary):
-        """
-        URL encodes the data in the dictionary, and signs it using the
-        given secret, if a secret was given.
-
-        Arguments:
-        dictionary -- the dictionary containing the key/value parameter pairs
-        """
-        dictionary['appid'] = self.service.config.appid
-        dictionary['origin'] = self.service.config.origin
-        dictionary['ts'] = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
-        dictionary['applib'] = "python"
-        dictionary = make_utf8(dictionary)
-        values = list()
-        signing = list()
-        secret = self.service.config.secret
-        for key in sorted(dictionary.keys(), key=str.lower):
-            signing.append(key + dictionary[key])
-            values.append(key + '=' + quote_plus(dictionary[key]))
-        signing = bytes_(''.join(signing))
-        values.append('sig=' + md5(secret + signing).hexdigest())
-        return '&'.join(values)
-
-
-class ScormCloudUtilities(object):
-    """
-    Provides utility functions for working with the SCORM Cloud.
-    """
-
-    @staticmethod
-    def get_canonical_origin_string(organization, application, version):
-        """
-        Helper function to build a proper origin string to provide to the
-        SCORM Cloud configuration. Takes the organization name, application
-        name, and application version.
-
-        :param organization: the name of the organization that created the software
-            using the Python Cloud library
-        :param application: the name of the application software using the Python
-            Cloud library
-        :param version: the version string for the application software
-        :type organization: str
-        :type application: str
-        :type version: str
-        """
-        namepattern = re.compile(r'[^a-z0-9]')
-        versionpattern = re.compile(r'[^a-z0-9\.\-]')
-        org = namepattern.sub('', organization.lower())
-        app = namepattern.sub('', application.lower())
-        ver = versionpattern.sub('', version.lower())
-        return "%s.%s.%s" % (org, app, ver)
-
-    @staticmethod
-    def clean_cloud_host_url(url):
-        """
-        Simple function that helps ensure a working API URL. Assumes that the
-        URL of the host service ends with /api and processes the given URL to
-        meet this assumption.
-
-        :param url: the URL for the Cloud service, typically as entered by a user
-            in their configuration
-        :type url: str
-        """
-        parts = url.split('/')
-        if not parts[len(parts) - 1] == 'api':
-            parts.append('api')
-        return '/'.join(parts)

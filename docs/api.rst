@@ -5,7 +5,10 @@
 Client
 ======
 
-.. automodule:: nti.scorm_cloud.client
+.. toctree::
+	:maxdepth: 2
+
+	client
 
 Compat
 ======
