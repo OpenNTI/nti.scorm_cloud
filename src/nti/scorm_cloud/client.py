@@ -168,12 +168,9 @@ class DebugService(object):
     def gettime(self):
         try:
             xmldoc = self.service.make_call('rustici.debug.getTime')
-            rsp = xmldoc.documentElement
-            if rsp.attributes['stat'].value != 'ok':
-                return rsp.firstChild.firstChild.nodeValue
+            return xmldoc.documentElement.firstChild.firstChild.nodeValue
         except Exception:
-            pass
-        return None
+            return None
     getTime = gettime
 
 
@@ -801,7 +798,7 @@ class ServiceRequest(object):
         # 'origin': self.service.config.origin,
         # 'ts': datetime.datetime.utcnow().strftime('yyyyMMddHHmmss'),
         # 'applib': 'python'}
-        for k, v in self.parameters.iteritems():
+        for k, v in self.parameters.items():
             params[k] = v
         url = self.service.config.serviceurl
         if serviceurl is not None:
