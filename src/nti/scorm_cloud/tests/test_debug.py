@@ -13,42 +13,47 @@ from hamcrest import none
 from hamcrest import assert_that
 
 import unittest
-from six import StringIO
 
 import fudge
 
-from nti.scorm_cloud.client import ScormCloudService
+from nti.scorm_cloud.client.scorm import ScormCloudService
 
 from nti.scorm_cloud.tests import SharedConfiguringTestLayer
+
+XML_HEADER = '<?xml version="1.0" encoding="utf-8" ?>'
 
 
 class TestDebugService(unittest.TestCase):
 
     layer = SharedConfiguringTestLayer
 
-    @fudge.patch('nti.scorm_cloud.client.urlopen')
-    def test_service(self, mock_up):
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_service(self, mock_ss):
         service = ScormCloudService.withargs("appid", "secret",
                                              "http://cloud.scorm.com/api")
         debug = service.get_debug_service()
 
         # ping / authping
         for method in ('ping', 'authping'):
-            reply = u'<?xml version="1.0" encoding="utf-8" ?><rsp stat="ok"><pong /></rsp>'
-            buff = StringIO(reply)
-            mock_up.is_callable().returns(buff)
+            reply = XML_HEADER + '<rsp stat="ok"><pong /></rsp>'
+            data = fudge.Fake().has_attr(text=reply)
+            session = fudge.Fake().expects('get').returns(data)
+            mock_ss.is_callable().returns(session)
 
             method = getattr(debug, method)
             assert_that(method(), is_(True))
 
-            mock_up.is_callable().raises(ValueError())
+            session = fudge.Fake().expects('get').raises(ValueError())
+            mock_ss.is_callable().returns(session)
             assert_that(method(), is_(False))
 
         # gettime
-        reply = u'<?xml version="1.0" encoding="utf-8" ?><rsp stat="ok"><currenttime tz="UTC">20171130152345</currenttime></rsp>'
-        buff = StringIO(reply)
-        mock_up.is_callable().returns(buff)
+        reply = XML_HEADER + '<rsp stat="ok"><currenttime tz="UTC">20171130152345</currenttime></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
         assert_that(debug.gettime(), is_('20171130152345'))
 
-        mock_up.is_callable().raises(ValueError())
+        session = fudge.Fake().expects('get').raises(ValueError())
+        mock_ss.is_callable().returns(session)
         assert_that(debug.gettime(), is_(none()))
