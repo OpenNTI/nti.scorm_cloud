@@ -36,6 +36,7 @@ from nti.scorm_cloud.client.invitation import InvitationService
 
 from nti.scorm_cloud.client.request import make_utf8
 from nti.scorm_cloud.client.request import ServiceRequest
+from nti.scorm_cloud.client.request import ScormCloudError
 from nti.scorm_cloud.client.request import ScormCloudUtilities
 
 from nti.scorm_cloud.interfaces import ITagSettings
@@ -509,16 +510,6 @@ class TagSettings(object):
                 result.extend(('&view', k.capitalize()))
                 result.extend(('TagGroups=', quote(self.get_view_tag_str(k))))
         return ''.join(result)
-
-
-class ScormCloudError(Exception):
-
-    def __init__(self, msg, json=None):
-        self.msg = msg
-        self.json = json
-
-    def __str__(self):
-        return repr(self.msg)
 
 
 class ImportResult(object):
