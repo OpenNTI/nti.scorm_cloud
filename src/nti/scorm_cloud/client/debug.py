@@ -28,18 +28,18 @@ class DebugService(object):
         except Exception:
             return False
 
-    def authping(self):
+    def authPing(self):
         try:
             xmldoc = self.service.make_call('rustici.debug.authPing')
             return xmldoc.documentElement.attributes['stat'].value == 'ok'
         except Exception:
             return False
-    authPing = authping
+    authping = authPing
 
-    def gettime(self):
+    def getTime(self):
         try:
             xmldoc = self.service.make_call('rustici.debug.getTime')
             return xmldoc.documentElement.firstChild.firstChild.nodeValue
         except Exception:
             return None
-    getTime = gettime
+    gettime = getTime
