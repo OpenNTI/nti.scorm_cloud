@@ -154,8 +154,7 @@ class DebugService(object):
         try:
             xmldoc = self.service.make_call('rustici.debug.ping')
             return xmldoc.documentElement.attributes['stat'].value == 'ok'
-        except Exception as e:
-            print(e)
+        except Exception:
             return False
 
     def authping(self):
