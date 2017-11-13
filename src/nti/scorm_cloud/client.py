@@ -168,12 +168,9 @@ class DebugService(object):
     def gettime(self):
         try:
             xmldoc = self.service.make_call('rustici.debug.getTime')
-            rsp = xmldoc.documentElement
-            if rsp.attributes['stat'].value != 'ok':
-                return rsp.firstChild.firstChild.nodeValue
+            return xmldoc.documentElement.firstChild.firstChild.nodeValue
         except Exception:
-            pass
-        return None
+            return None
     getTime = gettime
 
 
