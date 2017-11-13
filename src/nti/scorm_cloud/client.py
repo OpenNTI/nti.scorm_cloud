@@ -154,7 +154,8 @@ class DebugService(object):
         try:
             xmldoc = self.service.make_call('rustici.debug.ping')
             return xmldoc.documentElement.attributes['stat'].value == 'ok'
-        except Exception:
+        except Exception as e:
+            print(e)
             return False
 
     def authping(self):
@@ -798,7 +799,7 @@ class ServiceRequest(object):
         # 'origin': self.service.config.origin,
         # 'ts': datetime.datetime.utcnow().strftime('yyyyMMddHHmmss'),
         # 'applib': 'python'}
-        for k, v in self.parameters.iteritems():
+        for k, v in self.parameters.items():
             params[k] = v
         url = self.service.config.serviceurl
         if serviceurl is not None:
