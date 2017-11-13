@@ -15,6 +15,61 @@ from zope.schema import Object
 from zope.schema import TextLine
 
 
+class IScormCloudService(interface.Interface):
+    """
+    Primary cloud service object that provides access to the more specific
+    service areas, like the RegistrationService.
+    """
+
+    def get_course_service():
+        """
+        Retrieves the CourseService.
+
+        :return: return a new course service object
+        :rtype: :class:`.ICourseService`
+        """
+
+    def get_debug_service():
+        """
+        Retrieves the DebugService.
+
+        :return: return a new debug service object
+        :rtype: :class:`.IDebugService`
+        """
+
+    def get_registration_service():
+        """
+        Retrieves the RegistrationService.
+
+        :return: return a new registration service object
+        :rtype: :class:`.IRegistrationService`
+        """
+
+    def get_invitation_service():
+        """
+        Retrieves the InvitationService.
+
+        :return: return a new invitation service object
+        :rtype: :class:`.IInvitationService`
+        """
+
+    def get_reporting_service():
+        """
+        Retrieves the ReportingService.
+
+        :return: return a new reporting service object
+        :rtype: :class:`.IReportingService`
+        """
+
+    def get_upload_service():
+        """
+        Retrieves the UploadService.
+
+        :return: return a new upload service object
+        :rtype: :class:`.IUploadService`
+        """
+
+
 class ICourseService(interface.Interface):
     """
     Service that provides methods to manage and interact with courses on the
@@ -117,6 +172,9 @@ class IDebugService(interface.Interface):
     Debugging and testing service that allows you to check the status of the
     SCORM Cloud and test your configuration settings.
     """
+    
+    service = Object(IScormCloudService, 
+                     title=u"The scorm cloud service")
 
     def ping():
         """
@@ -127,6 +185,13 @@ class IDebugService(interface.Interface):
         """
         An authenticated ping that checks the connection to the SCORM Cloud
         and verifies the configured credentials.
+        """
+
+    def gettime():
+        """
+        Returns the time on the running instance, in (UTC/GMT) timezone in the 
+        form ‘yyyyMMddHHmmss’. This format is used for the timestamp that is part of 
+        the security mechanism.
         """
 
 
@@ -458,59 +523,4 @@ class IReportingService(interface.Interface):
             get_reportage_auth
         :param widgettype: the widget type desired (for example, learnerSummary)
         :param widgetSettings: the :class:`IWidgetSettings` object for the widget type
-        """
-
-
-class IScormCloudService(interface.Interface):
-    """
-    Primary cloud service object that provides access to the more specific
-    service areas, like the RegistrationService.
-    """
-
-    def get_course_service():
-        """
-        Retrieves the CourseService.
-
-        :return: return a new course service object
-        :rtype: :class:`.ICourseService`
-        """
-
-    def get_debug_service():
-        """
-        Retrieves the DebugService.
-
-        :return: return a new debug service object
-        :rtype: :class:`.IDebugService`
-        """
-
-    def get_registration_service():
-        """
-        Retrieves the RegistrationService.
-
-        :return: return a new registration service object
-        :rtype: :class:`.IRegistrationService`
-        """
-
-    def get_invitation_service():
-        """
-        Retrieves the InvitationService.
-
-        :return: return a new invitation service object
-        :rtype: :class:`.IInvitationService`
-        """
-
-    def get_reporting_service():
-        """
-        Retrieves the ReportingService.
-
-        :return: return a new reporting service object
-        :rtype: :class:`.IReportingService`
-        """
-
-    def get_upload_service():
-        """
-        Retrieves the UploadService.
-
-        :return: return a new upload service object
-        :rtype: :class:`.IUploadService`
         """
