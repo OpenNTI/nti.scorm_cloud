@@ -53,6 +53,7 @@ setup(
     install_requires=[
         'setuptools',
         'six',
+        'requests',
         'zope.component',
         'zope.interface',
         'zope.schema',
