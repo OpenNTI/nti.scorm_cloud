@@ -59,11 +59,9 @@ class InvitationService(object):
             request.parameters['expirationdate'] = expirationdate
 
         if async_:
-            xmldoc = request.call_service(
-                'rustici.invitation.createInvitationAsync')
+            xmldoc = request.call_service('rustici.invitation.createInvitationAsync')
         else:
-            xmldoc = request.call_service(
-                'rustici.invitation.createInvitation')
+            xmldoc = request.call_service('rustici.invitation.createInvitation')
         return xmldoc.documentElement.firstChild.nodeValue
 
     def createInvitation(self, courseid, public=True, send=True, addresses=None,
