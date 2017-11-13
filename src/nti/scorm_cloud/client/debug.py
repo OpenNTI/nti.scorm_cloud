@@ -23,15 +23,15 @@ class DebugService(object):
 
     def ping(self):
         try:
-            xmldoc = self.service.make_call('rustici.debug.ping')
-            return xmldoc.documentElement.attributes['stat'].value == 'ok'
+            self.service.make_call('rustici.debug.ping')
+            return True
         except Exception:
             return False
 
     def authPing(self):
         try:
-            xmldoc = self.service.make_call('rustici.debug.authPing')
-            return xmldoc.documentElement.attributes['stat'].value == 'ok'
+            self.service.make_call('rustici.debug.authPing')
+            return True
         except Exception:
             return False
     authping = authPing
