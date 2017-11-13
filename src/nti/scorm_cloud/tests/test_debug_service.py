@@ -13,7 +13,7 @@ from hamcrest import none
 from hamcrest import assert_that
 
 import unittest
-from io import BytesIO
+from six import StringIO
 
 import fudge
 
@@ -34,8 +34,8 @@ class TestDebugService(unittest.TestCase):
 
         # ping / authping
         for method in ('ping', 'authping'):
-            reply = '<?xml version="1.0" encoding="utf-8" ?><rsp stat="ok"><pong /></rsp>'
-            buff = BytesIO(reply)
+            reply = u'<?xml version="1.0" encoding="utf-8" ?><rsp stat="ok"><pong /></rsp>'
+            buff = StringIO(reply)
             mock_up.is_callable().returns(buff)
 
             method = getattr(debug, method)
@@ -45,8 +45,8 @@ class TestDebugService(unittest.TestCase):
             assert_that(method(), is_(False))
 
         # gettime
-        reply = '<?xml version="1.0" encoding="utf-8" ?><rsp stat="ok"><currenttime tz="UTC">20171130152345</currenttime></rsp>'
-        buff = BytesIO(reply)
+        reply = u'<?xml version="1.0" encoding="utf-8" ?><rsp stat="ok"><currenttime tz="UTC">20171130152345</currenttime></rsp>'
+        buff = StringIO(reply)
         mock_up.is_callable().returns(buff)
         assert_that(debug.gettime(), is_('20171130152345'))
 
