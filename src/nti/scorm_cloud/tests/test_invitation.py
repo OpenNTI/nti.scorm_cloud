@@ -138,3 +138,48 @@ class TestInvitationService(unittest.TestCase):
                                                                         'instanceid', '0',
                                                                         'totaltime', 0.0,
                                                                         'score', 'unknown')))
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_invitation_list(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        service = service.get_invitation_service()
+
+        reply = """
+        <invitationlist>
+            <invitationInfo>
+                <id><![CDATA[35568984-16cf-4d81-92dd-ea69eb4dacd4]]></id>
+                <body><![CDATA[Dear [USER],<p>You have been invited to take 'Feedback 1.2 invite app'. To start your training click on the Play button or copy the training URL into your browser.</p><a href='[URL]'>Play course</a><br><br>URL: [URL]]]></body>
+                <courseId><![CDATA[Feedback1.2inviteapp00ec1901-a17c-4165-9294-fdb105707541]]></courseId>
+                <subject><![CDATA[Feedback 1.2 invite app]]></subject>
+                <url/>
+                <allowLaunch>true</allowLaunch>
+                <allowNewRegistrations>true</allowNewRegistrations>
+                <public>false</public>
+                <created>true</created>
+                <createdDate>2012-05-02T22:13:47.503+0000</createdDate>
+                <userInvitations/>
+            </invitationInfo>
+        </invitationlist>
+        """
+        reply = XML_HEADER + '<rsp stat="ok">%s</rsp>' % reply
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        assert_that(service.getInvitationList('92dd', 'Feeback'), 
+                    has_length(1))
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_change_status(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        service = service.get_invitation_service()
+
+        reply = XML_HEADER + '<rsp stat="ok"><success/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        service.changeStatus('35568984-16cf-4d81-92dd-ea69eb4dacd4',
+                             True, True, '20171130152345')

@@ -91,7 +91,8 @@ class InvitationService(object):
         if coursefilter is not None:
             request.parameters['coursefilter'] = coursefilter
         xmldoc = request.call_service('rustici.invitation.getInvitationList')
-        return xmldoc.documentElement.firstChild.firstChild.nodeValue
+        nodes = xmldoc.documentElement.getElementsByTagName('invitationInfo')
+        return [InvitationInfo.fromMinidom(n) for n in nodes or ()]
     get_invitation_list = getInvitationList
 
     def getInvitationStatus(self, invitationId):
@@ -104,23 +105,22 @@ class InvitationService(object):
     def getInvitationInfo(self, invitationId, detail=False):
         request = self.service.request()
         request.parameters['invitationId'] = invitationId
-        if detail:
-            request.parameters['detail'] = str(detail).lower()
+        request.parameters['detail'] = str(detail).lower()
         xmldoc = request.call_service('rustici.invitation.getInvitationInfo')
         nodes = xmldoc.documentElement.getElementsByTagName('invitationInfo')
         return InvitationInfo.fromMinidom(nodes[0]) if nodes else None
     get_invitation_info = getInvitationInfo
 
-    def changeStatus(self, invitationId, enable, open_=True, expirationdate=None):
+    def changeStatus(self, invitationId, enable, open_=None, expirationdate=None):
         request = self.service.request()
         request.parameters['invitationId'] = invitationId
         request.parameters['enable'] = str(enable).lower()
         if open_ is not None:
+            assert isinstance(open_, bool)
             request.parameters['open'] = str(open_).lower()
         if expirationdate is not None:
             request.parameters['expirationdate'] = expirationdate
-        data = request.call_service('rustici.invitation.changeStatus')
-        return data
+        request.call_service('rustici.invitation.changeStatus')
     change_status = changeStatus
 
 
@@ -160,15 +160,12 @@ class UserInvitation(object):
     @classmethod
     def fromMinidom(cls, node):
         nodes = node.getElementsByTagName('registrationreport')
-        if nodes:
-            registrationreport = RegistrationReport.fromMinidom(nodes[0])
-        else:
-            registrationreport = None
+        report = RegistrationReport.fromMinidom(nodes[0]) if nodes else None
         return cls(getChildCDATA(node, 'email'),
                    getChildCDATA(node, 'url'),
                    getChildText(node, 'isStarted') == 'true',
                    getChildCDATA(node, 'registrationId'),
-                   registrationreport)
+                   report)
 
 
 class InvitationInfo(object):
