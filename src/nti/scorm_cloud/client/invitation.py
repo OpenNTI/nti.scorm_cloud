@@ -12,6 +12,8 @@ from zope import interface
 
 from nti.scorm_cloud.interfaces import IInvitationService
 
+from nti.scorm_cloud.client.mixins import RegistrationMixin
+
 from nti.scorm_cloud.client.request import ScormCloudError
 
 from nti.scorm_cloud.minidom import getChildText
@@ -127,17 +129,15 @@ class InvitationService(object):
     change_status = changeStatus
 
 
-class RegistrationReport(object):
-
+class RegistrationReport(RegistrationMixin):
+    
     def __init__(self, format_, regid=None, instanceid=None,
                  complete=None, success=None, totaltime=0, score=None):
-        self.regid = regid
+        RegistrationMixin.__init__(self, format_, regid, instanceid)
         self.score = score
-        self.format = format_
         self.success = success
         self.complete = complete
         self.totaltime = totaltime
-        self.instanceid = instanceid
 
     @classmethod
     def fromMinidom(cls, node):

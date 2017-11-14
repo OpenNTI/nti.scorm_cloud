@@ -52,6 +52,20 @@ def getChildTextOrCDATA(node, name):
     return None
 
 
+def getChildren(node, parent, child):
+    nodes = node.getElementsByTagName(parent)
+    if nodes:
+        return nodes[0].getElementsByTagName(child)
+    return None
+
+
+def getFirstChild(node, name):
+    nodes = node.getElementsByTagName(name)
+    if nodes:
+        return nodes[0]
+    return None
+
+
 def getAttributeValue(node, name):
     attr = node.attributes.get(name)
     return attr.value if attr is not None else None
