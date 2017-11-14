@@ -172,8 +172,8 @@ class IDebugService(interface.Interface):
     Debugging and testing service that allows you to check the status of the
     SCORM Cloud and test your configuration settings.
     """
-    
-    service = Object(IScormCloudService, 
+
+    service = Object(IScormCloudService,
                      title=u"The scorm cloud service")
 
     def ping():
@@ -224,6 +224,9 @@ class IRegistrationService(interface.Interface):
     registrations on the SCORM Cloud. These methods correspond to the
     "rustici.registration.*" web service methods.
     """
+
+    service = Object(IScormCloudService,
+                     title=u"The scorm cloud service")
 
     def create_registration(regid, courseid, userid, fname, lname,
                             email=None, learnerTags=None, courseTags=None, registrationTags=None):
@@ -333,7 +336,7 @@ class IInvitationService(interface.Interface):
     Service that provides methods for interacting with the invitation service.
     """
 
-    service = Object(IScormCloudService, 
+    service = Object(IScormCloudService,
                      title=u"The scorm cloud service")
 
     def createInvitation(courseid, public=True, send=True, addresses=None,
