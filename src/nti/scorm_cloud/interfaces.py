@@ -172,8 +172,8 @@ class IDebugService(interface.Interface):
     Debugging and testing service that allows you to check the status of the
     SCORM Cloud and test your configuration settings.
     """
-    
-    service = Object(IScormCloudService, 
+
+    service = Object(IScormCloudService,
                      title=u"The scorm cloud service")
 
     def ping():
@@ -225,21 +225,38 @@ class IRegistrationService(interface.Interface):
     "rustici.registration.*" web service methods.
     """
 
-    def create_registration(regid, courseid, userid, fname, lname,
-                            email=None, learnerTags=None, courseTags=None, registrationTags=None):
+    service = Object(IScormCloudService,
+                     title=u"The scorm cloud service")
+
+    def createRegistration(courseid, regid, fname, lname, learnerid,
+                           email=None, postbackurl=None, authtype=None, urlname=None,
+                           urlpass=None, resultsformat=None):
         """
         Creates a new registration (an instance of a user taking a course).
 
-        :param regid: (optional) the unique identifier for the registration
-        :param courseid: the unique identifier for the course
-        :param userid: the unique identifier for the learner
-        :param fname: the learner's first name
-        :param lname: the learner's last name
+        :param courseid: the course for which this registration is being created
+        :param regid: (optional) the id used to identify this registration (it must be unique)
+        :param fname: the first name of the learner associated with this registration
+        :param lname: the last name of the learner associated with this registration
+        :param learnerid: The learner id associated with this registration
         :param email: the learner's email address
+        :param postbackurl: specifies a URL for which to post activity and status data in real time as the course is completed
+        :param authtype: specify how to authorize against the given postbackurl, can be “form” or “httpbasic”
+        :param urlname: an optional login name to be used for credentials when posting to the URL specified in postbackurl
+        :param urlpass: credentials for the postbackurl
+        :param resultsformat: level of detail in the information that is posted back while the course is being taken. 
+            It may be one of three values: “course” (course summary), “activity” (activity summary), or “full” (full detail)
+        :type courseid: str
         :type regid: str
         :type fname: str
         :type fname: str
         :type email: str
+        :type email: str
+        :type postbackurl: str
+        :type authtype: str
+        :type urlname: str
+        :type urlpass: str
+        :type resultsformat: str
         :return: return unique identifier for the registration
         :rtype: str
         """
@@ -333,7 +350,7 @@ class IInvitationService(interface.Interface):
     Service that provides methods for interacting with the invitation service.
     """
 
-    service = Object(IScormCloudService, 
+    service = Object(IScormCloudService,
                      title=u"The scorm cloud service")
 
     def createInvitation(courseid, public=True, send=True, addresses=None,

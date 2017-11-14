@@ -19,11 +19,11 @@ import fudge
 
 from nti.scorm_cloud.client.invitation import InvitationInfo
 
+from nti.scorm_cloud.client.request import ScormCloudError
+
 from nti.scorm_cloud.client.scorm import ScormCloudService
 
 from nti.scorm_cloud.tests import SharedConfiguringTestLayer
-
-XML_HEADER = '<?xml version="1.0" encoding="utf-8" ?>'
 
 
 class TestInvitationService(unittest.TestCase):
@@ -36,7 +36,7 @@ class TestInvitationService(unittest.TestCase):
                                              "http://cloud.scorm.com/api")
         invitation = service.get_invitation_service()
 
-        reply = XML_HEADER + '<rsp stat="ok">937296cb-ae79-4190-bb6f-9a39b97785ac</rsp>'
+        reply = '<rsp stat="ok">937296cb-ae79-4190-bb6f-9a39b97785ac</rsp>'
         data = fudge.Fake().has_attr(text=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
@@ -58,7 +58,7 @@ class TestInvitationService(unittest.TestCase):
                                              "http://cloud.scorm.com/api")
         invitation = service.get_invitation_service()
 
-        reply = XML_HEADER + '<rsp stat="ok"><status>complete</status></rsp>'
+        reply = '<rsp stat="ok"><status>complete</status></rsp>'
         data = fudge.Fake().has_attr(text=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
@@ -112,7 +112,7 @@ class TestInvitationService(unittest.TestCase):
             </userInvitations>
         </invitationInfo>
         """
-        reply = XML_HEADER + '<rsp stat="ok">%s</rsp>' % reply
+        reply = '<rsp stat="ok">%s</rsp>' % reply
         data = fudge.Fake().has_attr(text=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
@@ -136,7 +136,7 @@ class TestInvitationService(unittest.TestCase):
                                    'registrationreport', has_properties('format', 'course',
                                                                         'regid', 'as5a3fe8-8e02-4677-af83-f6d818256278',
                                                                         'instanceid', '0',
-                                                                        'totaltime', 0.0,
+                                                                        'totaltime', '0',
                                                                         'score', 'unknown')))
 
     @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
@@ -162,7 +162,7 @@ class TestInvitationService(unittest.TestCase):
             </invitationInfo>
         </invitationlist>
         """
-        reply = XML_HEADER + '<rsp stat="ok">%s</rsp>' % reply
+        reply = '<rsp stat="ok">%s</rsp>' % reply
         data = fudge.Fake().has_attr(text=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
@@ -176,10 +176,18 @@ class TestInvitationService(unittest.TestCase):
                                              "http://cloud.scorm.com/api")
         service = service.get_invitation_service()
 
-        reply = XML_HEADER + '<rsp stat="ok"><success/></rsp>'
+        reply = '<rsp stat="ok"><success/></rsp>'
         data = fudge.Fake().has_attr(text=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
         service.changeStatus('35568984-16cf-4d81-92dd-ea69eb4dacd4',
                              True, True, '20171130152345')
+        
+        reply = '<rsp stat="ok"><failed/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        with self.assertRaises(ScormCloudError):
+            service.changeStatus('35568984-16cf-4d81-92dd-ea69eb4dacd4', True)

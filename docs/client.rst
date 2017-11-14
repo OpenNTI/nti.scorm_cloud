@@ -8,6 +8,16 @@ Debug Service
 
 .. automodule:: nti.scorm_cloud.client.debug
 
+Invitation Service
+==================
+
+.. automodule:: nti.scorm_cloud.client.invitation
+
+Registration Service
+====================
+
+.. automodule:: nti.scorm_cloud.client.registration
+
 Request
 =======
 

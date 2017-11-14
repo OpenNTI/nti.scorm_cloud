@@ -14,13 +14,14 @@ from nti.scorm_cloud.client import CourseService
 from nti.scorm_cloud.client import UploadService
 from nti.scorm_cloud.client import ServiceRequest
 from nti.scorm_cloud.client import ReportingService
-from nti.scorm_cloud.client import RegistrationService
 
 from nti.scorm_cloud.client.config import Configuration
 
 from nti.scorm_cloud.client.debug import DebugService
 
 from nti.scorm_cloud.client.invitation import InvitationService
+
+from nti.scorm_cloud.client.registration import RegistrationService
 
 from nti.scorm_cloud.interfaces import IScormCloudService
 

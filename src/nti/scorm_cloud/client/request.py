@@ -21,6 +21,8 @@ from requests import Session
 from nti.scorm_cloud.compat import bytes_
 from nti.scorm_cloud.compat import native_
 
+from nti.scorm_cloud.minidom import getAttributeValue
+
 logger = __import__('logging').getLogger(__name__)
 
 
@@ -117,9 +119,10 @@ class ServiceRequest(object):
         rsp = xmldoc.documentElement
         if rsp.attributes['stat'].value != 'ok':
             err = rsp.firstChild
-            raise ScormCloudError('SCORM Cloud Error: %s - %s' %
-                                  (err.attributes['code'].value,
-                                   err.attributes['msg'].value))
+            msg = getAttributeValue(err, 'msg')
+            code = getAttributeValue(err, 'code')
+            raise ScormCloudError('SCORM Cloud Error: %s - %s' % (code, msg),
+                                  msg, code)
         return xmldoc
 
     def session(self):
