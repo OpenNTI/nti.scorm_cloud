@@ -261,6 +261,47 @@ class IRegistrationService(interface.Interface):
         :rtype: str
         """
 
+    def exists(regid):
+        """
+        check a whether or not the specified registration exist
+
+        :param regid: the unique identifier for the registration
+        :type regid: str
+        :return: whether or not the specified registration exist
+        :rtype: bool
+        """
+
+    def deleteRegistration(regid):
+        """
+        Deletes the specified registration.
+
+        :param regid: the unique identifier for the registration
+        :type regid: str
+        """
+
+    def resetRegistration(regid):
+        """
+        Resets all status data for the specified registration, essentially
+        restarting the course for the associated learner.
+
+        :param regid: the unique identifier for the registration
+        :type regid: str
+        """
+
+    def getRegistrationList(courseid=None, learnerid=None, after=None, until=None):
+        """
+        Return a list of registrations associated with the given appid.
+
+        :param courseid: limit search to only registrations for the course specified by this courseid
+        :param learnerid: limit search to only registrations for the learner specified by this learnerid
+        :param after: return registrations updated (strictly) after this timestamp.
+        :param until: return registrations updated up to and including this timestamp.
+        :type courseid: str
+        :type learnerid: str
+        :type after: str
+        :type until: str
+        """
+
     def get_launch_url(regid, redirecturl, cssUrl=None, courseTags=None,
                        learnerTags=None, registrationTags=None):
         """
@@ -284,20 +325,6 @@ class IRegistrationService(interface.Interface):
         :type registrationTags: list of str
         """
 
-    def get_registration_list(regIdFilterRegex=None,
-                              courseIdFilterRegex=None):
-        """
-        Retrieves a list of registration associated with the configured AppID.
-        Can optionally be filtered by registration or course ID.
-
-        :param regIdFilterRegex: (optional) the regular expression used to filter the 
-            list by registration ID
-        :param courseIdFilterRegex: (optional) the regular expression used to filter
-            the list by course ID
-        :type regIdFilterRegex: str
-        :type courseIdFilterRegex: str
-        """
-
     def get_registration_result(regid, resultsformat):
         """
         Gets information about the specified registration.
@@ -319,26 +346,9 @@ class IRegistrationService(interface.Interface):
         :type regid: str
         """
 
-    def reset_registration(regid):
-        """
-        Resets all status data for the specified registration, essentially
-        restarting the course for the associated learner.
-
-        :param regid: the unique identifier for the registration
-        :type regid: str
-        """
-
     def reset_global_objectives(regid):
         """
         Clears global objective data for the specified registration.
-
-        :param regid: the unique identifier for the registration
-        :type regid: str
-        """
-
-    def delete_registration(regid):
-        """
-        Deletes the specified registration.
 
         :param regid: the unique identifier for the registration
         :type regid: str

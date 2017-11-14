@@ -16,6 +16,8 @@ from nti.scorm_cloud.client.request import ScormCloudError
 
 from nti.scorm_cloud.interfaces import IRegistrationService
 
+from nti.scorm_cloud.minidom import getChildTextOrCDATA
+
 logger = __import__('logging').getLogger(__name__)
 
 
@@ -48,13 +50,57 @@ class RegistrationService(object):
             request.parameters['urlpass'] = urlpass
         if resultsformat:
             request.parameters['resultsformat'] = resultsformat
-        xmldoc = request.call_service('rustici.registration.createRegistration')
+        xmldoc = request.call_service(
+            'rustici.registration.createRegistration')
         successNodes = xmldoc.getElementsByTagName('success')
         if not successNodes:
             raise ScormCloudError("Create Registration failed.")
         return regid
     create_registration = createRegistration
-    
+
+    def exists(self, regid):
+        request = self.service.request()
+        request.parameters['regid'] = regid
+        request.parameters['appid'] = self.service.config.appid
+        xmldoc = request.call_service('rustici.registration.exists')
+        result = xmldoc.documentElement.firstChild.firstChild.nodeValue
+        return result == 'true'
+
+    def deleteRegistration(self, regid):
+        request = self.service.request()
+        request.parameters['regid'] = regid
+        xmldoc = request.call_service(
+            'rustici.registration.deleteRegistration')
+        successNodes = xmldoc.getElementsByTagName('success')
+        if not successNodes:
+            raise ScormCloudError("Delete Registration failed.")
+    delete_registration = deleteRegistration
+
+    def resetRegistration(self, regid):
+        request = self.service.request()
+        request.parameters['regid'] = regid
+        xmldoc = request.call_service('rustici.registration.resetRegistration')
+        successNodes = xmldoc.getElementsByTagName('success')
+        if not successNodes:
+            raise ScormCloudError("Reset Registration failed.")
+    reset_registration = resetRegistration
+
+    def getRegistrationList(self, courseid=None, learnerid=None, after=None, until=None):
+        request = self.service.request()
+        if courseid:
+            request.parameters['courseid'] = courseid
+        if learnerid:
+            request.parameters['learnerid'] = learnerid
+        if after:
+            request.parameters['after'] = after
+        if until:
+            request.parameters['until'] = until
+        xmldoc = request.call_service(
+            'rustici.registration.getRegistrationList')
+        nodes = xmldoc.documentElement.getElementsByTagName('registration')
+        return [Registration.fromMinidom(n) for n in nodes or ()]
+    get_registration_list = getRegistrationList
+
     def get_launch_url(self, regid, redirecturl, cssUrl=None, courseTags=None,
                        learnerTags=None, registrationTags=None):
         request = self.service.request()
@@ -71,17 +117,6 @@ class RegistrationService(object):
         url = request.construct_url('rustici.registration.launch')
         return url
 
-    def get_registration_list(self, regIdFilterRegex=None, courseIdFilterRegex=None):
-        request = self.service.request()
-        if regIdFilterRegex:
-            request.parameters['filter'] = regIdFilterRegex
-        if courseIdFilterRegex:
-            request.parameters['coursefilter'] = courseIdFilterRegex
-        result = request.call_service(
-            'rustici.registration.getRegistrationList')
-        regs = RegistrationData.list_from_result(result)
-        return regs
-
     def get_registration_result(self, regid, resultsformat):
         request = self.service.request()
         request.parameters['regid'] = regid
@@ -93,43 +128,65 @@ class RegistrationService(object):
         request.parameters['regid'] = regid
         return request.call_service('rustici.registration.getLaunchHistory')
 
-    def reset_registration(self, regid):
-        request = self.service.request()
-        request.parameters['regid'] = regid
-        return request.call_service('rustici.registration.resetRegistration')
-
     def reset_global_objectives(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
         return request.call_service('rustici.registration.resetGlobalObjectives')
 
-    def delete_registration(self, regid):
-        request = self.service.request()
-        request.parameters['regid'] = regid
-        return request.call_service('rustici.registration.deleteRegistration')
 
+class Instance(object):
 
-class RegistrationData(object):
-
-    courseId = ""
-    registrationId = ""
-
-    def __init__(self, regDataElement):
-        if regDataElement is not None:
-            self.courseId = regDataElement.attributes['courseid'].value
-            self.registrationId = regDataElement.attributes['id'].value
+    def __init__(self, instanceId, courseVersion=None, updateDate=None):
+        self.instanceId = instanceId
+        self.updateDate = updateDate
+        self.courseVersion = courseVersion
 
     @classmethod
-    def list_from_result(cls, xmldoc):
-        """
-        Returns a list of RegistrationData objects by parsing the result of an
-        API method that returns registration elements.
+    def fromMinidom(cls, node):
+        return cls(getChildTextOrCDATA(node, 'instanceId'),
+                   getChildTextOrCDATA(node, 'courseVersion'),
+                   getChildTextOrCDATA(node, 'updateDate'))
 
-        Arguments:
-        data -- the raw result of the API method
-        """
-        allResults = []
-        regs = xmldoc.getElementsByTagName("registration")
-        for reg in regs:
-            allResults.append(cls(reg))
-        return allResults
+
+class Registration(object):
+
+    def __init__(self, appId, registrationId, courseId,
+                 courseTitle=None, lastCourseVersionLaunched=None,
+                 learnerId=None, learnerFirstName=None, learnerLastName=None,
+                 email=None, createDate=None, firstAccessDate=None, lastAccessDate=None,
+                 completedDate=None, instances=()):
+
+        self.appId = appId
+        self.email = email
+        self.courseId = courseId
+        self.instances = instances
+        self.learnerId = learnerId
+        self.createDate = createDate
+        self.courseTitle = courseTitle
+        self.completedDate = completedDate
+        self.lastAccessDate = lastAccessDate
+        self.registrationId = registrationId
+        self.firstAccessDate = firstAccessDate
+        self.learnerLastName = learnerLastName
+        self.learnerFirstName = learnerFirstName
+        self.lastCourseVersionLaunched = lastCourseVersionLaunched
+
+    @classmethod
+    def fromMinidom(cls, node):
+        instances = []
+        for child in node.getElementsByTagName('instance') or ():
+            instances.append(Instance.fromMinidom(child))
+        return cls(getChildTextOrCDATA(node, 'appId'),
+                   getChildTextOrCDATA(node, 'registrationId'),
+                   getChildTextOrCDATA(node, 'courseId'),
+                   getChildTextOrCDATA(node, 'courseTitle'),
+                   getChildTextOrCDATA(node, 'lastCourseVersionLaunched'),
+                   getChildTextOrCDATA(node, 'learnerId'),
+                   getChildTextOrCDATA(node, 'learnerFirstName'),
+                   getChildTextOrCDATA(node, 'learnerLastName'),
+                   getChildTextOrCDATA(node, 'email'),
+                   getChildTextOrCDATA(node, 'createDate'),
+                   getChildTextOrCDATA(node, 'firstAccessDate'),
+                   getChildTextOrCDATA(node, 'lastAccessDate'),
+                   getChildTextOrCDATA(node, 'completedDate'),
+                   instances or ())

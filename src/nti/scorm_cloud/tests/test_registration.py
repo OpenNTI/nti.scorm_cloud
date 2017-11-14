@@ -10,11 +10,15 @@ from __future__ import absolute_import
 
 from hamcrest import is_
 from hamcrest import not_none
+from hamcrest import has_length
 from hamcrest import assert_that
+from hamcrest import has_properties
 
 import unittest
 
 import fudge
+
+from nti.scorm_cloud.client.request import ScormCloudError
 
 from nti.scorm_cloud.client.scorm import ScormCloudService
 
@@ -44,3 +48,116 @@ class TestRegistrationService(unittest.TestCase):
                                        "httpbasic", "ichigo", "zangetsu",
                                        "course")
         assert_that(regid, is_(not_none()))
+
+        reply = '<rsp stat="ok"><failed/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        with self.assertRaises(ScormCloudError):
+            reg.createRegistration("bankai", None,
+                                   'Ichigo', 'Kurosaki',
+                                   'ichigo@bleach.org',
+                                   'ichigo@bleach.org',
+                                   "http://bleach.org",
+                                   "httpbasic", "ichigo", "zangetsu",
+                                   "course")
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_exists(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+
+        reply = '<rsp stat="ok"><result>false</result></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        regid = reg.exists("bankai")
+        assert_that(regid, is_(False))
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_delete_registration(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+
+        reply = '<rsp stat="ok"><success/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        reg.deleteRegistration("bankai")
+
+        reply = '<rsp stat="ok"><failed/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        with self.assertRaises(ScormCloudError):
+            reg.deleteRegistration("bankai")
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_reset_registration(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+
+        reply = '<rsp stat="ok"><success/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        reg.resetRegistration("bankai")
+
+        reply = '<rsp stat="ok"><failed/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        with self.assertRaises(ScormCloudError):
+            reg.resetRegistration("bankai")
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_registration_list(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+
+        reply = """
+        <registrationlist>
+            <registration id="reg4" courseid="test321">
+                <appId>myappid</appId>
+                <registrationId>reg4</registrationId>
+                <courseId>test321</courseId>
+                <courseTitle>Test Course</courseTitle>
+                <learnerId>test_learner</learnerId>
+                <learnerFirstName>Test</learnerFirstName>
+                <learnerLastName>Learner</learnerLastName>
+                <email>test@test.com</email>
+                <createDate>2011-03-23T14:00:45.000+0000</createDate>
+                <firstAccessDate>2011-06-06T16:08:18.000+0000</firstAccessDate>
+                <lastAccessDate>2011-06-06T16:36:12.000+0000</lastAccessDate>
+                <completedDate>2011-06-06T16:36:12.000+0000</completedDate>
+                <instances />
+            </registration>
+        </registrationlist>
+        """
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        registrations = reg.getRegistrationList(after="2011-02-01T21:39:23Z")
+        assert_that(registrations, has_length(1))
+
+        assert_that(registrations[0],
+                    has_properties('appId', 'myappid',
+                                   'registrationId', 'reg4',
+                                   'courseId', 'test321',
+                                   'courseTitle', 'Test Course',
+                                   'learnerId', 'test_learner',
+                                   'learnerFirstName', 'Test',
+                                   'learnerLastName', 'Learner',
+                                   'email', 'test@test.com',
+                                   'createDate', '2011-03-23T14:00:45.000+0000',
+                                   'instances', has_length(0)))
