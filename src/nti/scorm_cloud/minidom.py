@@ -8,21 +8,27 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from xml.dom.minidom import Document
 
-def getText(nodes=()):
+
+def getData(nodes=(), types=()):
     result = []
     for node in nodes or ():
-        if node.nodeType == node.TEXT_NODE:
+        if node.nodeType in types:
             result.append(node.data)
     return ''.join(result)
 
 
+def getText(nodes=()):
+    return getData(nodes, (Document.TEXT_NODE,))
+
+
 def getCDATA(nodes=()):
-    result = []
-    for node in nodes or ():
-        if node.nodeType == node.CDATA_SECTION_NODE:
-            result.append(node.data)
-    return ''.join(result) or None
+    return getData(nodes, (Document.CDATA_SECTION_NODE,))
+
+
+def getTextOrCDATA(nodes=()):
+    return getData(nodes, (Document.TEXT_NODE, Document.CDATA_SECTION_NODE))
 
 
 def getChildText(node, name):
@@ -36,6 +42,13 @@ def getChildCDATA(node, name):
     nodes = node.getElementsByTagName(name)
     if nodes:
         return getCDATA(nodes[0].childNodes)
+    return None
+
+
+def getChildTextOrCDATA(node, name):
+    nodes = node.getElementsByTagName(name)
+    if nodes:
+        return getTextOrCDATA(nodes[0].childNodes)
     return None
 
 
