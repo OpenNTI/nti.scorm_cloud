@@ -25,34 +25,37 @@ class RegistrationService(object):
     def __init__(self, service):
         self.service = service
 
-    def create_registration(self, regid, courseid, userid, fname, lname,
-                            email=None, learnerTags=None, courseTags=None,
-                            registrationTags=None):
+    def createRegistration(self, courseid, regid, fname, lname, learnerid,
+                           email=None, postbackurl=None, authtype=None, urlname=None,
+                           urlpass=None, resultsformat=None):
         if not regid:
             regid = str(uuid.uuid1())
         request = self.service.request()
-        request.parameters['appid'] = self.service.config.appid
-        request.parameters['courseid'] = courseid
         request.parameters['regid'] = regid
         request.parameters['fname'] = fname
         request.parameters['lname'] = lname
-        request.parameters['learnerid'] = userid
+        request.parameters['courseid'] = courseid
+        request.parameters['learnerid'] = learnerid
+        request.parameters['appid'] = self.service.config.appid
         if email:
             request.parameters['email'] = email
-        if learnerTags:
-            request.parameters['learnerTags'] = learnerTags
-        if courseTags:
-            request.parameters['courseTags'] = courseTags
-        if registrationTags is not None:
-            request.parameters['registrationTags'] = registrationTags
-        xmldoc = request.call_service(
-            'rustici.registration.createRegistration')
+        if postbackurl:
+            request.parameters['postbackurl'] = postbackurl
+        if authtype:
+            request.parameters['authtype'] = authtype
+        if urlname:
+            request.parameters['urlname'] = urlname
+        if urlpass:
+            request.parameters['urlpass'] = urlpass
+        if resultsformat:
+            request.parameters['resultsformat'] = resultsformat
+        xmldoc = request.call_service('rustici.registration.createRegistration')
         successNodes = xmldoc.getElementsByTagName('success')
-        if successNodes is None or successNodes.length == 0:
-            raise ScormCloudError("Create Registration failed.  " +
-                                  xmldoc.err.attributes['msg'])
+        if not successNodes:
+            raise ScormCloudError("Create Registration failed.")
         return regid
-
+    create_registration = createRegistration
+    
     def get_launch_url(self, regid, redirecturl, cssUrl=None, courseTags=None,
                        learnerTags=None, registrationTags=None):
         request = self.service.request()
