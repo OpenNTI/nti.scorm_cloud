@@ -20,8 +20,6 @@ from nti.scorm_cloud.client.scorm import ScormCloudService
 
 from nti.scorm_cloud.tests import SharedConfiguringTestLayer
 
-XML_HEADER = '<?xml version="1.0" encoding="utf-8" ?>'
-
 
 class TestDebugService(unittest.TestCase):
 
@@ -35,7 +33,7 @@ class TestDebugService(unittest.TestCase):
 
         # ping / authping
         for method in ('ping', 'authping'):
-            reply = XML_HEADER + '<rsp stat="ok"><pong /></rsp>'
+            reply = '<rsp stat="ok"><pong /></rsp>'
             data = fudge.Fake().has_attr(text=reply)
             session = fudge.Fake().expects('get').returns(data)
             mock_ss.is_callable().returns(session)
@@ -48,7 +46,7 @@ class TestDebugService(unittest.TestCase):
             assert_that(method(), is_(False))
 
         # gettime
-        reply = XML_HEADER + '<rsp stat="ok"><currenttime tz="UTC">20171130152345</currenttime></rsp>'
+        reply = '<rsp stat="ok"><currenttime tz="UTC">20171130152345</currenttime></rsp>'
         data = fudge.Fake().has_attr(text=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
