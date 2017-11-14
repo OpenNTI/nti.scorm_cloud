@@ -50,8 +50,7 @@ class RegistrationService(object):
             request.parameters['urlpass'] = urlpass
         if resultsformat:
             request.parameters['resultsformat'] = resultsformat
-        xmldoc = request.call_service(
-            'rustici.registration.createRegistration')
+        xmldoc = request.call_service('rustici.registration.createRegistration')
         successNodes = xmldoc.getElementsByTagName('success')
         if not successNodes:
             raise ScormCloudError("Create Registration failed.")
@@ -69,8 +68,7 @@ class RegistrationService(object):
     def deleteRegistration(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
-        xmldoc = request.call_service(
-            'rustici.registration.deleteRegistration')
+        xmldoc = request.call_service('rustici.registration.deleteRegistration')
         successNodes = xmldoc.getElementsByTagName('success')
         if not successNodes:
             raise ScormCloudError("Delete Registration failed.")
@@ -95,11 +93,18 @@ class RegistrationService(object):
             request.parameters['after'] = after
         if until:
             request.parameters['until'] = until
-        xmldoc = request.call_service(
-            'rustici.registration.getRegistrationList')
+        xmldoc = request.call_service('rustici.registration.getRegistrationList')
         nodes = xmldoc.documentElement.getElementsByTagName('registration')
         return [Registration.fromMinidom(n) for n in nodes or ()]
     get_registration_list = getRegistrationList
+
+    def getRegistrationDetail(self, regid):
+        request = self.service.request()
+        request.parameters['regid'] = regid
+        xmldoc = request.call_service('rustici.registration.getRegistrationDetail')
+        nodes = xmldoc.getElementsByTagName('registration')
+        return Registration.fromMinidom(nodes[0]) if nodes else None
+    get_registration_detail = getRegistrationDetail
 
     def get_launch_url(self, regid, redirecturl, cssUrl=None, courseTags=None,
                        learnerTags=None, registrationTags=None):

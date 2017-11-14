@@ -161,3 +161,49 @@ class TestRegistrationService(unittest.TestCase):
                                    'email', 'test@test.com',
                                    'createDate', '2011-03-23T14:00:45.000+0000',
                                    'instances', has_length(0)))
+        
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_registration_detail(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+
+        reply = """
+        <registration id="reg123" courseid="SequencingForcedSequential_SCORM20043rdEditionb0535515-a4c9-4dad-bd85-04bcc54f96b7">
+            <appId><![CDATA[myappid]]></appId>
+            <registrationId><![CDATA[reg123]]></registrationId>
+            <courseId><![CDATA[course123]]></courseId>
+            <courseTitle><![CDATA[Golf Explained - Sequencing Forced]]></courseTitle>
+            <lastCourseVersionLaunched><![CDATA[2]]></lastCourseVersionLaunched>
+            <learnerId><![CDATA[test@test.com]]></learnerId>
+            <learnerFirstName><![CDATA[Test]]></learnerFirstName>
+            <learnerLastName><![CDATA[Man]]></learnerLastName>
+            <email><![CDATA[test@test.com]]></email>
+            <createDate><![CDATA[2011-07-25T20:05:01.000+0000]]></createDate>
+            <firstAccessDate><![CDATA[2011-07-25T20:23:44.000+0000]]></firstAccessDate>
+            <lastAccessDate><![CDATA[2011-07-25T20:55:09.000+0000]]></lastAccessDate>
+            <completedDate><![CDATA[2011-07-25T20:33:20.000+0000]]></completedDate>
+            <instances>
+                <instance>
+                    <instanceId><![CDATA[0]]></instanceId>
+                    <courseVersion><![CDATA[1]]></courseVersion>
+                    <updateDate><![CDATA[2011-07-25T20:33:20.000+0000]]></updateDate>
+                </instance>
+                <instance>
+                    <instanceId><![CDATA[1]]></instanceId>
+                    <courseVersion><![CDATA[2]]></courseVersion>
+                    <updateDate><![CDATA[2011-07-25T20:55:08.000+0000]]></updateDate>
+                </instance>
+            </instances>
+        </registration>
+        """
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        registration = reg.getRegistrationDetail("reg123")
+        assert_that(registration,
+                    has_properties('appId', 'myappid',
+                                   'courseId', 'course123',
+                                   'instances', has_length(2)))

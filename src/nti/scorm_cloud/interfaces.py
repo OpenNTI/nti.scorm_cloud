@@ -302,6 +302,14 @@ class IRegistrationService(interface.Interface):
         :type until: str
         """
 
+    def getRegistrationDetail(regid):
+        """
+        Return detail for a registration 
+
+        :param regid: the registration id 
+        :type regid: str
+        """
+
     def get_launch_url(regid, redirecturl, cssUrl=None, courseTags=None,
                        learnerTags=None, registrationTags=None):
         """
