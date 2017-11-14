@@ -146,7 +146,7 @@ class RegistrationReport(object):
                    getAttributeValue(node, 'instanceid'),
                    getChildText(node, 'complete'),
                    getChildText(node, 'success'),
-                   float(getChildText(node, 'totaltime') or 0),
+                   getChildText(node, 'totaltime'),
                    getChildText(node, 'score'))
 
 
