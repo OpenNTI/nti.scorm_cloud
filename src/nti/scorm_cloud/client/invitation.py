@@ -12,6 +12,8 @@ from zope import interface
 
 from nti.scorm_cloud.interfaces import IInvitationService
 
+from nti.scorm_cloud.client.request import ScormCloudError
+
 from nti.scorm_cloud.minidom import getChildText
 from nti.scorm_cloud.minidom import getChildCDATA
 from nti.scorm_cloud.minidom import getAttributeValue
@@ -118,7 +120,10 @@ class InvitationService(object):
             request.parameters['open'] = str(open_).lower()
         if expirationdate is not None:
             request.parameters['expirationdate'] = expirationdate
-        request.call_service('rustici.invitation.changeStatus')
+        xmldoc = request.call_service('rustici.invitation.changeStatus')
+        successNodes = xmldoc.getElementsByTagName('success')
+        if not successNodes:
+            raise ScormCloudError("Change Status failed.")
     change_status = changeStatus
 
 

@@ -19,6 +19,8 @@ import fudge
 
 from nti.scorm_cloud.client.invitation import InvitationInfo
 
+from nti.scorm_cloud.client.request import ScormCloudError
+
 from nti.scorm_cloud.client.scorm import ScormCloudService
 
 from nti.scorm_cloud.tests import SharedConfiguringTestLayer
@@ -183,3 +185,11 @@ class TestInvitationService(unittest.TestCase):
 
         service.changeStatus('35568984-16cf-4d81-92dd-ea69eb4dacd4',
                              True, True, '20171130152345')
+        
+        reply = XML_HEADER + '<rsp stat="ok"><failed/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        with self.assertRaises(ScormCloudError):
+            service.changeStatus('35568984-16cf-4d81-92dd-ea69eb4dacd4', True)
