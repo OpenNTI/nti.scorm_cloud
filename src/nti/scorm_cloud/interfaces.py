@@ -70,103 +70,6 @@ class IScormCloudService(interface.Interface):
         """
 
 
-class ICourseService(interface.Interface):
-    """
-    Service that provides methods to manage and interact with courses on the
-    SCORM Cloud. These methods correspond to the "rustici.course.*" web service
-    methods.
-    """
-
-    def import_uploaded_course(courseid, path):
-        """
-        Imports a SCORM PIF (zip file) from an existing zip file on the SCORM
-        Cloud server.
-
-        :param courseid: the unique identifier for the course
-        :param path: the relative path to the zip file to import
-        """
-
-    def delete_course(courseid):
-        """
-        Deletes the specified course.
-
-        :param courseid: the unique identifier for the course
-        """
-
-    def get_assets(courseid, path=None):
-        """
-        Downloads a file from a course by path. If no path is provided, all the
-        course files will be downloaded contained in a zip file.
-
-        :param courseid: the unique identifier for the course
-        :param path: the path (relative to the course root) of the file to download.
-            If not provided or is None, all course files will be downloaded.
-        """
-
-    def get_course_list(courseIdFilterRegex=None):
-        """
-        Retrieves a list of CourseData elements for all courses owned by the
-        configured AppID that meet the specified filter criteria.
-
-        :param courseIdFilterRegex: (optional) Regular expression to filter courses
-            by ID
-        :type courseIdFilterRegex: str
-        """
-
-    def get_preview_url(courseid, redirecturl, stylesheeturl=None):
-        """
-        Gets the URL that can be opened to preview the course without the need
-        for a registration.
-
-        Arguments:
-        :param courseid: the unique identifier for the course
-        :param redirecturl: the URL to which the browser should redirect upon course
-            exit
-        :param stylesheeturl: the URL for the CSS stylesheet to include
-        :type redirecturl: str
-        :type stylesheeturl: str
-        """
-
-    def get_metadata(courseid):
-        """
-        Gets the course metadata in XML format.
-
-        :param courseid: the unique identifier for the course
-        """
-
-    def get_property_editor_url(courseid, stylesheetUrl=None,
-                                notificationFrameUrl=None):
-        """
-        Gets the URL to view/edit the package properties for the course.
-        Typically used within an IFRAME element.
-
-        :param courseid: the unique identifier for the course
-        :param stylesheeturl -- URL to a custom editor stylesheet
-        :param notificationFrameUrl -- Tells the property editor to render a sub-iframe
-            with this URL as the source. This can be used to simulate an 
-            "onload" by using a notificationFrameUrl that is on the same domain 
-            as the host system and calling parent.parent.method()
-        :type stylesheeturl: str
-        :type notificationFrameUrl: str
-        """
-
-    def get_attributes(courseid):
-        """
-        Retrieves the list of associated attributes for the course. 
-
-        :param courseid: the unique identifier for the course
-        :param versionid: the specific version of the course
-        """
-
-    def update_attributes(courseid, attributePairs):
-        """
-        Updates the specified attributes for the course.
-
-        :param courseid: the unique identifier for the course
-        :param attributePairs: the attribute name/value pairs to update
-        """
-
-
 class IDebugService(interface.Interface):
     """
     Debugging and testing service that allows you to check the status of the
@@ -192,29 +95,6 @@ class IDebugService(interface.Interface):
         Returns the time on the running instance, in (UTC/GMT) timezone in the 
         form ‘yyyyMMddHHmmss’. This format is used for the timestamp that is part of 
         the security mechanism.
-        """
-
-
-class IUploadService(interface.Interface):
-    """
-    Service that provides functionality to upload files to the SCORM Cloud.
-    """
-
-    def get_upload_token():
-        """
-        Retrieves an upload token which must be used to successfully upload a
-        file.
-        """
-
-    def get_upload_url(callbackurl):
-        """
-        Returns a URL that can be used to upload a file via HTTP POST, through
-        an HTML form element action, for example.
-        """
-
-    def delete_file(location):
-        """
-        Deletes the specified file.
         """
 
 
@@ -492,6 +372,125 @@ class IInvitationService(interface.Interface):
         :type expirationdate: str
         """
 
+
+class IUploadService(interface.Interface):
+    """
+    Service that provides functionality to upload files to the SCORM Cloud.
+    """
+
+    def get_upload_token():
+        """
+        Retrieves an upload token which must be used to successfully upload a
+        file.
+        """
+
+    def get_upload_url(callbackurl):
+        """
+        Returns a URL that can be used to upload a file via HTTP POST, through
+        an HTML form element action, for example.
+        """
+
+    def delete_file(location):
+        """
+        Deletes the specified file.
+        """
+
+
+class ICourseService(interface.Interface):
+    """
+    Service that provides methods to manage and interact with courses on the
+    SCORM Cloud. These methods correspond to the "rustici.course.*" web service
+    methods.
+    """
+
+    def import_uploaded_course(courseid, path):
+        """
+        Imports a SCORM PIF (zip file) from an existing zip file on the SCORM
+        Cloud server.
+
+        :param courseid: the unique identifier for the course
+        :param path: the relative path to the zip file to import
+        """
+
+    def delete_course(courseid):
+        """
+        Deletes the specified course.
+
+        :param courseid: the unique identifier for the course
+        """
+
+    def get_assets(courseid, path=None):
+        """
+        Downloads a file from a course by path. If no path is provided, all the
+        course files will be downloaded contained in a zip file.
+
+        :param courseid: the unique identifier for the course
+        :param path: the path (relative to the course root) of the file to download.
+            If not provided or is None, all course files will be downloaded.
+        """
+
+    def get_course_list(courseIdFilterRegex=None):
+        """
+        Retrieves a list of CourseData elements for all courses owned by the
+        configured AppID that meet the specified filter criteria.
+
+        :param courseIdFilterRegex: (optional) Regular expression to filter courses
+            by ID
+        :type courseIdFilterRegex: str
+        """
+
+    def get_preview_url(courseid, redirecturl, stylesheeturl=None):
+        """
+        Gets the URL that can be opened to preview the course without the need
+        for a registration.
+
+        Arguments:
+        :param courseid: the unique identifier for the course
+        :param redirecturl: the URL to which the browser should redirect upon course
+            exit
+        :param stylesheeturl: the URL for the CSS stylesheet to include
+        :type redirecturl: str
+        :type stylesheeturl: str
+        """
+
+    def get_metadata(courseid):
+        """
+        Gets the course metadata in XML format.
+
+        :param courseid: the unique identifier for the course
+        """
+
+    def get_property_editor_url(courseid, stylesheetUrl=None,
+                                notificationFrameUrl=None):
+        """
+        Gets the URL to view/edit the package properties for the course.
+        Typically used within an IFRAME element.
+
+        :param courseid: the unique identifier for the course
+        :param stylesheeturl -- URL to a custom editor stylesheet
+        :param notificationFrameUrl -- Tells the property editor to render a sub-iframe
+            with this URL as the source. This can be used to simulate an 
+            "onload" by using a notificationFrameUrl that is on the same domain 
+            as the host system and calling parent.parent.method()
+        :type stylesheeturl: str
+        :type notificationFrameUrl: str
+        """
+
+    def get_attributes(courseid):
+        """
+        Retrieves the list of associated attributes for the course. 
+
+        :param courseid: the unique identifier for the course
+        :param versionid: the specific version of the course
+        """
+
+    def update_attributes(courseid, attributePairs):
+        """
+        Updates the specified attributes for the course.
+
+        :param courseid: the unique identifier for the course
+        :param attributePairs: the attribute name/value pairs to update
+        """
 
 class IDateRangeSettings(interface.Interface):
 

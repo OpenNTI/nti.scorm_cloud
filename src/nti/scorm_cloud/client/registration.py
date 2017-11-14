@@ -16,6 +16,12 @@ from nti.scorm_cloud.client.request import ScormCloudError
 
 from nti.scorm_cloud.interfaces import IRegistrationService
 
+from nti.scorm_cloud.client.mixins import RegistrationMixin
+
+from nti.scorm_cloud.minidom import getChildren
+from nti.scorm_cloud.minidom import getChildText
+from nti.scorm_cloud.minidom import getFirstChild
+from nti.scorm_cloud.minidom import getAttributeValue
 from nti.scorm_cloud.minidom import getChildTextOrCDATA
 
 logger = __import__('logging').getLogger(__name__)
@@ -179,8 +185,8 @@ class Registration(object):
     @classmethod
     def fromMinidom(cls, node):
         instances = []
-        for child in node.getElementsByTagName('instance') or ():
-            instances.append(Instance.fromMinidom(child))
+        for n in getChildren(node, 'instances', 'instance') or ():
+            instances.append(Instance.fromMinidom(n))
         return cls(getChildTextOrCDATA(node, 'appId'),
                    getChildTextOrCDATA(node, 'registrationId'),
                    getChildTextOrCDATA(node, 'courseId'),
@@ -195,3 +201,104 @@ class Registration(object):
                    getChildTextOrCDATA(node, 'lastAccessDate'),
                    getChildTextOrCDATA(node, 'completedDate'),
                    instances or ())
+
+
+class RegistrationReport(RegistrationMixin):
+
+    def __init__(self, format_, regid=None, instanceid=None,
+                 complete=None, success=None, totaltime=0, score=None,
+                 activity=None):
+        RegistrationMixin.__init__(self, format_, regid, instanceid)
+        self.score = score
+        self.success = success
+        self.activity = activity
+        self.complete = complete
+        self.totaltime = totaltime
+
+    @classmethod
+    def fromMinidom(cls, node):
+        activity = getFirstChild(node, 'activity')
+        activity = Activity.fromMinidom(activity) if activity else None
+        return cls(getAttributeValue(node, 'format'),
+                   getAttributeValue(node, 'regid'),
+                   getAttributeValue(node, 'instanceid'),
+                   getChildText(node, 'complete'),
+                   getChildText(node, 'success'),
+                   getChildText(node, 'totaltime'),
+                   getChildText(node, 'score'),
+                   activity)
+
+
+class Objective(object):
+
+    def __init__(self, id_, measurestatus=False, normalizedmeasure=0.0,
+                 progressstatus=False, satisfiedstatus=False,
+                 score_scaled=None, score_min=None, score_raw=None,
+                 success_status=None, completion_status=None, progress_measure=None,
+                 description=None):
+
+        self.id = id_
+        self.score_min = score_min
+        self.score_raw = score_raw
+        self.description = description
+        self.score_scaled = score_scaled
+        self.measurestatus = measurestatus
+        self.progressstatus = progressstatus
+        self.success_status = success_status
+        self.satisfiedstatus = satisfiedstatus
+        self.progress_measure = progress_measure
+        self.completion_status = completion_status
+        self.normalizedmeasure = normalizedmeasure
+
+    @classmethod
+    def fromMinidom(cls, node):
+        return cls(getAttributeValue(node, 'id'),
+                   getChildText(node, 'measurestatus') == 'true',
+                   float(getChildText(node, 'normalizedmeasure') or '0.0'),
+                   getChildText(node, 'progressstatus') == 'true',
+                   getChildText(node, 'satisfiedstatus') == 'true',
+                   getChildText(node, 'score_scaled'),
+                   getChildText(node, 'score_min'),
+                   getChildText(node, 'score_raw'),
+                   getChildText(node, 'success_status'),
+                   getChildText(node, 'completion_status'),
+                   getChildText(node, 'progress_measure'),
+                   getChildText(node, 'description'))
+
+
+class Activity(object):
+
+    def __init__(self, id_, title, satisfied=False,
+                 completed=False, progressstatus=False, attempts=1,
+                 suspended=False, time_=None, score=None,
+                 objectives=(), children=()):
+        self.id = id_
+        self.time = time_
+        self.title = title
+        self.score = score
+        self.attempts = attempts
+        self.children = children
+        self.suspended = suspended
+        self.completed = completed
+        self.satisfied = satisfied
+        self.objectives = objectives
+        self.progressstatus = progressstatus
+
+    @classmethod
+    def fromMinidom(cls, node):
+        objectives = []
+        for n in getChildren(node, 'objectives', 'objective') or ():
+            objectives.append(Objective.fromMinidom(n))
+        children = []
+        for n in getChildren(node, 'children', 'activity') or ():
+            children.append(Activity.fromMinidom(n))
+        return cls(getAttributeValue(node, 'id'),
+                   getChildText(node, 'title'),
+                   getChildText(node, 'satisfied') == 'true',
+                   getChildText(node, 'completed') == 'true',
+                   getChildText(node, 'progressstatus') == 'true',
+                   int(getChildText(node, 'attempts') or '0'),
+                   getChildText(node, 'time'),
+                   getChildText(node, 'score'),
+                   objectives or (),
+                   children or ())
