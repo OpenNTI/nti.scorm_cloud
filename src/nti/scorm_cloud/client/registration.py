@@ -28,8 +28,7 @@ class RegistrationService(object):
     def createRegistration(self, courseid, regid, fname, lname, learnerid,
                            email=None, postbackurl=None, authtype=None, urlname=None,
                            urlpass=None, resultsformat=None):
-        if not regid:
-            regid = str(uuid.uuid1())
+        regid = regid or str(uuid.uuid1())
         request = self.service.request()
         request.parameters['regid'] = regid
         request.parameters['fname'] = fname
