@@ -9,6 +9,8 @@ from __future__ import absolute_import
 # pylint: disable=W0212,R0904
 
 from hamcrest import is_
+from hamcrest import none
+from hamcrest import is_not
 from hamcrest import assert_that
 from hamcrest import has_properties
 from hamcrest import contains_string
@@ -29,7 +31,7 @@ class TestWithRepr(unittest.TestCase):
             pass
 
         r = repr(Foo())
-        assert_that(r, 
+        assert_that(r,
                     contains_string('<nti.scorm_cloud.tests.test_mixins.Foo'))
         assert_that(r, contains_string('{}>'))
 
@@ -50,4 +52,5 @@ class TestMixins(unittest.TestCase):
         assert_that(r,
                     has_properties('format', 'f',
                                    'regid', '123',
-                                   'instanceid', '1'))
+                                   'instanceid', '1',
+                                   '_v_node', is_not(none())))
