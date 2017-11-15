@@ -22,7 +22,7 @@ from nti.scorm_cloud.minidom import getChildCDATA
 
 class TestMinidom(unittest.TestCase):
 
-    def test_coverate(self):
+    def test_coverage(self):
         dom = minidom.parseString('<slideshow />')
         assert_that(getChildText(dom, 'a'), is_(none()))
         assert_that(getChildCDATA(dom, 'a'), is_(none()))
