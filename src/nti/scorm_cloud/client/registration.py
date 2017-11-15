@@ -16,8 +16,11 @@ from nti.scorm_cloud.client.request import ScormCloudError
 
 from nti.scorm_cloud.interfaces import IRegistrationService
 
+from nti.scorm_cloud.client.mixins import WithRepr
 from nti.scorm_cloud.client.mixins import NodeMixin
 from nti.scorm_cloud.client.mixins import RegistrationMixin
+
+from nti.scorm_cloud.client.mixins import nodecapture
 
 from nti.scorm_cloud.minidom import getChildren
 from nti.scorm_cloud.minidom import getChildText
@@ -153,6 +156,7 @@ class RegistrationService(object):
         return request.call_service('rustici.registration.resetGlobalObjectives')
 
 
+@WithRepr
 class Comment(NodeMixin):
 
     def __init__(self, value=None, location=None, date_time=None):
@@ -161,12 +165,14 @@ class Comment(NodeMixin):
         self.date_time = date_time
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         return cls(getChildTextOrCDATA(node, 'value'),
                    getChildTextOrCDATA(node, 'location'),
                    getChildTextOrCDATA(node, 'date_time'))
 
 
+@WithRepr
 class Response(NodeMixin):
 
     def __init__(self, id_=None, value=None):
@@ -179,6 +185,7 @@ class Response(NodeMixin):
                    getTextOrCDATA((node,)))
 
 
+@WithRepr
 class Interaction(NodeMixin):
 
     def __init__(self, id_, timestamp=None, weighting=None,
@@ -196,6 +203,7 @@ class Interaction(NodeMixin):
         self.correct_responses = correct_responses
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         objectives = []
         for n in getChildren(node, 'objectives', 'objective') or ():
@@ -214,6 +222,7 @@ class Interaction(NodeMixin):
                    correct_responses or ())
 
 
+@WithRepr
 class LearnerPreference(NodeMixin):
 
     def __init__(self, audio_level=None, language=None,
@@ -224,6 +233,7 @@ class LearnerPreference(NodeMixin):
         self.audio_captioning = audio_captioning
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         return cls(getChildTextOrCDATA(node, 'audio_level'),
                    getChildTextOrCDATA(node, 'language'),
@@ -231,6 +241,7 @@ class LearnerPreference(NodeMixin):
                    getChildTextOrCDATA(node, 'audio_captioning'))
 
 
+@WithRepr
 class Static(NodeMixin):
 
     def __init__(self, completion_threshold=None, launch_data=None,
@@ -245,6 +256,7 @@ class Static(NodeMixin):
         self.scaled_passing_score = scaled_passing_score
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         return cls(getChildTextOrCDATA(node, 'completion_threshold'),
                    getChildTextOrCDATA(node, 'launch_data'),
@@ -254,7 +266,8 @@ class Static(NodeMixin):
                    getChildTextOrCDATA(node, 'scaled_passing_score'),
                    getChildTextOrCDATA(node, 'time_limit_action'))
 
-                    
+
+@WithRepr           
 class Runtime(NodeMixin):
 
     def __init__(self, completion_status=None, credit=None, entry=None,
@@ -284,6 +297,7 @@ class Runtime(NodeMixin):
         self.comments_from_learner = comments_from_learner
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         pref = getFirstChild(node, 'learnerpreference')
         learnerpreference = LearnerPreference.fromMinidom(pref) if pref else None
@@ -322,6 +336,7 @@ class Runtime(NodeMixin):
                    objectives or ())
 
 
+@WithRepr
 class Instance(NodeMixin):
 
     def __init__(self, instanceId, courseVersion=None, updateDate=None):
@@ -330,12 +345,14 @@ class Instance(NodeMixin):
         self.courseVersion = courseVersion
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         return cls(getChildTextOrCDATA(node, 'instanceId'),
                    getChildTextOrCDATA(node, 'courseVersion'),
                    getChildTextOrCDATA(node, 'updateDate'))
 
 
+@WithRepr
 class Registration(NodeMixin):
 
     def __init__(self, appId, registrationId, courseId,
@@ -359,6 +376,7 @@ class Registration(NodeMixin):
         self.lastCourseVersionLaunched = lastCourseVersionLaunched
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         instances = []
         for n in getChildren(node, 'instances', 'instance') or ():
@@ -379,6 +397,7 @@ class Registration(NodeMixin):
                    instances or ())
 
 
+@WithRepr
 class RegistrationReport(RegistrationMixin):
 
     def __init__(self, format_, regid=None, instanceid=None,
@@ -392,6 +411,7 @@ class RegistrationReport(RegistrationMixin):
         self.totaltime = totaltime
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         activity = getFirstChild(node, 'activity')
         activity = Activity.fromMinidom(activity) if activity else None
@@ -405,6 +425,7 @@ class RegistrationReport(RegistrationMixin):
                    activity)
 
 
+@WithRepr
 class Objective(NodeMixin):
 
     def __init__(self, id_, measurestatus=False, normalizedmeasure=0.0,
@@ -426,6 +447,7 @@ class Objective(NodeMixin):
         self.normalizedmeasure = normalizedmeasure
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         return cls(getAttributeValue(node, 'id'),
                    getChildText(node, 'measurestatus') == 'true',
@@ -441,6 +463,7 @@ class Objective(NodeMixin):
                    getChildText(node, 'description'))
 
 
+@WithRepr
 class Activity(NodeMixin):
 
     def __init__(self, id_, title, complete=None, success=None,
@@ -463,6 +486,7 @@ class Activity(NodeMixin):
         self.progressstatus = progressstatus
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         objectives = []
         for n in getChildren(node, 'objectives', 'objective') or ():

@@ -12,8 +12,11 @@ from zope import interface
 
 from nti.scorm_cloud.interfaces import IInvitationService
 
+from nti.scorm_cloud.client.mixins import WithRepr
 from nti.scorm_cloud.client.mixins import NodeMixin
 from nti.scorm_cloud.client.mixins import RegistrationMixin
+
+from nti.scorm_cloud.client.mixins import nodecapture
 
 from nti.scorm_cloud.client.request import ScormCloudError
 
@@ -130,8 +133,9 @@ class InvitationService(object):
     change_status = changeStatus
 
 
+@WithRepr
 class RegistrationReport(RegistrationMixin):
-    
+
     def __init__(self, format_, regid=None, instanceid=None,
                  complete=None, success=None, totaltime=0, score=None):
         RegistrationMixin.__init__(self, format_, regid, instanceid)
@@ -141,6 +145,7 @@ class RegistrationReport(RegistrationMixin):
         self.totaltime = totaltime
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         return cls(getAttributeValue(node, 'format'),
                    getAttributeValue(node, 'regid'),
@@ -151,6 +156,7 @@ class RegistrationReport(RegistrationMixin):
                    getChildText(node, 'score'))
 
 
+@WithRepr
 class UserInvitation(NodeMixin):
 
     def __init__(self, email, url=None, isStarted=None, registrationId=None,
@@ -162,6 +168,7 @@ class UserInvitation(NodeMixin):
         self.registrationreport = registrationreport
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         nodes = node.getElementsByTagName('registrationreport')
         report = RegistrationReport.fromMinidom(nodes[0]) if nodes else None
@@ -172,6 +179,7 @@ class UserInvitation(NodeMixin):
                    report)
 
 
+@WithRepr
 class InvitationInfo(NodeMixin):
 
     def __init__(self, id_, body=None, courseId=None, subject=None,
@@ -190,6 +198,7 @@ class InvitationInfo(NodeMixin):
         self.allowNewRegistrations = allowNewRegistrations
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         userInvitations = []
         for child in node.getElementsByTagName('userInvitation') or ():
