@@ -12,6 +12,7 @@ from hamcrest import is_
 from hamcrest import not_none
 from hamcrest import has_length
 from hamcrest import assert_that
+from hamcrest import has_property
 from hamcrest import has_properties
 
 import unittest
@@ -161,7 +162,7 @@ class TestRegistrationService(unittest.TestCase):
                                    'email', 'test@test.com',
                                    'createDate', '2011-03-23T14:00:45.000+0000',
                                    'instances', has_length(0)))
-        
+
     @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
     def test_get_registration_detail(self, mock_ss):
         service = ScormCloudService.withargs("appid", "secret",
@@ -169,7 +170,7 @@ class TestRegistrationService(unittest.TestCase):
         reg = service.get_registration_service()
 
         reply = """
-        <registration id="reg123" courseid="SequencingForcedSequential_SCORM20043rdEditionb0535515-a4c9-4dad-bd85-04bcc54f96b7">
+        <registration id="reg123" courseid="course123">
             <appId><![CDATA[myappid]]></appId>
             <registrationId><![CDATA[reg123]]></registrationId>
             <courseId><![CDATA[course123]]></courseId>
@@ -207,3 +208,63 @@ class TestRegistrationService(unittest.TestCase):
                     has_properties('appId', 'myappid',
                                    'courseId', 'course123',
                                    'instances', has_length(2)))
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_registration_result(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+
+        reply = """
+        <registrationreport format="summary" regid="myreg001" instanceid="0">
+            <complete>complete</complete>
+            <success>failed</success>
+            <totaltime>19</totaltime>
+            <score>0</score>
+        </registrationreport>
+        """
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        result = reg.getRegistrationResult("reg123")
+        assert_that(result,
+                    has_properties('complete', 'complete',
+                                   'success', 'failed',
+                                   'totaltime', "19",
+                                   'format', 'summary',
+                                   'score', '0'))
+
+        reply = """
+        <registrationreport format="activity" regid="myreg001" instanceid="0">
+            <activity id="TOC1">
+                <title>Photoshop Example</title>
+                <attempts>1</attempts>
+                <complete>incomplete</complete>
+                <success>unknown</success>
+                <time/>
+                <score>0</score>
+                <children>
+                    <activity id="LESSON1">
+                      <title>Lesson 1</title>
+                      <score>0</score>
+                    </activity>
+                </children>
+            </activity>
+        </registrationreport>
+        """
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        result = reg.getRegistrationResult("reg123")
+        assert_that(result,
+                    has_property('activity',
+                                 has_properties('id', 'TOC1',
+                                                'attempts', 1,
+                                                'complete', "incomplete",
+                                                'success', 'unknown',
+                                                'score', '0',
+                                                'children', has_length(1))))

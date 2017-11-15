@@ -21,6 +21,7 @@ from nti.scorm_cloud.client.mixins import RegistrationMixin
 from nti.scorm_cloud.minidom import getChildren
 from nti.scorm_cloud.minidom import getChildText
 from nti.scorm_cloud.minidom import getFirstChild
+from nti.scorm_cloud.minidom import getTextOrCDATA
 from nti.scorm_cloud.minidom import getAttributeValue
 from nti.scorm_cloud.minidom import getChildTextOrCDATA
 
@@ -112,6 +113,18 @@ class RegistrationService(object):
         return Registration.fromMinidom(nodes[0]) if nodes else None
     get_registration_detail = getRegistrationDetail
 
+    def getRegistrationResult(self, regid, resultsformat=None, instanceid=None):
+        request = self.service.request()
+        request.parameters['regid'] = regid
+        if instanceid:
+            request.parameters['instanceid'] = instanceid
+        if resultsformat:
+            request.parameters['resultsformat'] = resultsformat
+        xmldoc = request.call_service('rustici.registration.getRegistrationResult')
+        nodes = xmldoc.getElementsByTagName('registrationreport')
+        return RegistrationReport.fromMinidom(nodes[0]) if nodes else None
+    get_registration_result = getRegistrationResult
+
     def get_launch_url(self, regid, redirecturl, cssUrl=None, courseTags=None,
                        learnerTags=None, registrationTags=None):
         request = self.service.request()
@@ -128,12 +141,6 @@ class RegistrationService(object):
         url = request.construct_url('rustici.registration.launch')
         return url
 
-    def get_registration_result(self, regid, resultsformat):
-        request = self.service.request()
-        request.parameters['regid'] = regid
-        request.parameters['resultsformat'] = resultsformat
-        return request.call_service('rustici.registration.getRegistrationResult')
-
     def get_launch_history(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
@@ -143,6 +150,140 @@ class RegistrationService(object):
         request = self.service.request()
         request.parameters['regid'] = regid
         return request.call_service('rustici.registration.resetGlobalObjectives')
+
+
+class Comment(object):
+
+    def __init__(self, value=None, location=None, date_time=None):
+        self.value = value
+        self.location = location
+        self.date_time = date_time
+
+    @classmethod
+    def fromMinidom(cls, node):
+        return cls(getChildTextOrCDATA(node, 'value'),
+                   getChildTextOrCDATA(node, 'location'),
+                   getChildTextOrCDATA(node, 'date_time'))
+
+
+class Response(object):
+
+    def __init__(self, id_=None, value=None):
+        self.id = id_
+        self.value = value
+
+    @classmethod
+    def fromMinidom(cls, node):
+        return cls(getAttributeValue(node, 'id'),
+                   getTextOrCDATA((node,)))
+
+
+class Interaction(object):
+
+    def __init__(self, timestamp=None, weighting=None,
+                 learner_response=None, result=None,
+                 latency=None, description=None,
+                 objectives=(), correct_responses=None):
+        self.result = result
+        self.latency = latency
+        self.timestamp = timestamp
+        self.weighting = weighting
+        self.objectives = objectives
+        self.description = description
+        self.learner_response = learner_response
+        self.correct_responses = correct_responses
+
+    @classmethod
+    def fromMinidom(cls, node):
+        objectives = []
+        for n in getChildren(node, 'objectives', 'objective') or ():
+            objectives.append(Objective.fromMinidom(n))
+        correct_responses = []
+        for n in getChildren(node, 'correct_responses', 'response') or ():
+            correct_responses.append(Response.fromMinidom(n))
+        return cls(getChildTextOrCDATA(node, 'timestamp'),
+                   getChildTextOrCDATA(node, 'weighting'),
+                   getChildTextOrCDATA(node, 'learner_response'),
+                   getChildTextOrCDATA(node, 'result'),
+                   getChildTextOrCDATA(node, 'latency'),
+                   getChildTextOrCDATA(node, 'description'),
+                   objectives or (),
+                   correct_responses or ())
+
+
+class LearnerPreference(object):
+
+    def __init__(self, audio_level=None, language=None,
+                 delivery_speed=None, audio_captioning=None):
+        self.language = language
+        self.audio_level = audio_level
+        self.delivery_speed = delivery_speed
+        self.audio_captioning = audio_captioning
+
+    @classmethod
+    def fromMinidom(cls, node):
+        return cls(getChildTextOrCDATA(node, 'audio_level'),
+                   getChildTextOrCDATA(node, 'language'),
+                   getChildTextOrCDATA(node, 'delivery_speed'),
+                   getChildTextOrCDATA(node, 'audio_captioning'))
+
+
+class Runtime(object):
+
+    def __init__(self, completion_status=None, credit=None, entry=None,
+                 exit_=None, location=None, mode=None, progress_measure=None,
+                 score_scaled=None, score_raw=None, total_time=None,
+                 timetracked=None, success_status=None, suspend_data=None,
+                 learnerpreference=None, comments_from_learner=(),
+                 comments_from_lms=(), interactions=()):
+        self.mode = mode
+        self.exit = exit_
+        self.entry = entry
+        self.credit = credit
+        self.location = location
+        self.score_raw = score_raw
+        self.total_time = total_time
+        self.timetracked = timetracked
+        self.interactions = interactions
+        self.score_scaled = score_scaled
+        self.suspend_data = suspend_data
+        self.success_status = success_status
+        self.progress_measure = progress_measure
+        self.completion_status = completion_status
+        self.learnerpreference = learnerpreference
+        self.comments_from_lms = comments_from_lms
+        self.comments_from_learner = comments_from_learner
+
+    @classmethod
+    def fromMinidom(cls, node):
+        pref = getFirstChild(node, 'learnerpreference')
+        learnerpreference = LearnerPreference.fromMinidom(node) if pref else None
+        comments_from_learner = []
+        for n in getChildren(node, 'comments_from_learner', 'comment') or ():
+            comments_from_learner.append(Comment.fromMinidom(n))
+        comments_from_lms = []
+        for n in getChildren(node, 'comments_from_lms', 'comment') or ():
+            comments_from_lms.append(Comment.fromMinidom(n))
+        interactions = []
+        for n in getChildren(node, 'interactions', 'interaction') or ():
+            interactions.append(Interaction.fromMinidom(n))
+        return cls(getChildText(node, 'completion_status'),
+                   getChildText(node, 'credit'),
+                   getChildText(node, 'entry'),
+                   getChildText(node, 'exit'),
+                   getChildText(node, 'location'),
+                   getChildText(node, 'mode'),
+                   getChildText(node, 'progress_measure'),
+                   getChildText(node, 'score_scaled'),
+                   getChildText(node, 'score_raw'),
+                   getChildText(node, 'total_time'),
+                   getChildText(node, 'timetracked'),
+                   getChildText(node, 'success_status'),
+                   getChildTextOrCDATA(node, 'suspend_data'),
+                   learnerpreference,
+                   comments_from_learner,
+                   comments_from_lms,
+                   interactions)
 
 
 class Instance(object):
@@ -268,16 +409,19 @@ class Objective(object):
 
 class Activity(object):
 
-    def __init__(self, id_, title, satisfied=False,
-                 completed=False, progressstatus=False, attempts=1,
+    def __init__(self, id_, title, complete=None, success=None,
+                 satisfied=False, completed=False, progressstatus=False, attempts=1,
                  suspended=False, time_=None, score=None,
-                 objectives=(), children=()):
+                 objectives=(), children=(), runtime=None):
         self.id = id_
         self.time = time_
         self.title = title
         self.score = score
+        self.success = success
+        self.runtime = runtime
         self.attempts = attempts
         self.children = children
+        self.complete = complete
         self.suspended = suspended
         self.completed = completed
         self.satisfied = satisfied
@@ -292,13 +436,19 @@ class Activity(object):
         children = []
         for n in getChildren(node, 'children', 'activity') or ():
             children.append(Activity.fromMinidom(n))
+        runtime = getFirstChild(node, 'runtime')
+        runtime = Runtime.fromMinidom(runtime) if runtime else None
         return cls(getAttributeValue(node, 'id'),
                    getChildText(node, 'title'),
+                   getChildText(node, 'complete'),
+                   getChildText(node, 'success'),
                    getChildText(node, 'satisfied') == 'true',
                    getChildText(node, 'completed') == 'true',
                    getChildText(node, 'progressstatus') == 'true',
                    int(getChildText(node, 'attempts') or '0'),
+                   getChildText(node, 'suspended') == 'true',
                    getChildText(node, 'time'),
                    getChildText(node, 'score'),
                    objectives or (),
-                   children or ())
+                   children or (),
+                   runtime)
