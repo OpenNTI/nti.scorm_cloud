@@ -16,6 +16,7 @@ from nti.scorm_cloud.client.request import ScormCloudError
 
 from nti.scorm_cloud.interfaces import IRegistrationService
 
+from nti.scorm_cloud.client.mixins import NodeMixin
 from nti.scorm_cloud.client.mixins import RegistrationMixin
 
 from nti.scorm_cloud.minidom import getChildren
@@ -152,7 +153,7 @@ class RegistrationService(object):
         return request.call_service('rustici.registration.resetGlobalObjectives')
 
 
-class Comment(object):
+class Comment(NodeMixin):
 
     def __init__(self, value=None, location=None, date_time=None):
         self.value = value
@@ -166,7 +167,7 @@ class Comment(object):
                    getChildTextOrCDATA(node, 'date_time'))
 
 
-class Response(object):
+class Response(NodeMixin):
 
     def __init__(self, id_=None, value=None):
         self.id = id_
@@ -178,12 +179,13 @@ class Response(object):
                    getTextOrCDATA((node,)))
 
 
-class Interaction(object):
+class Interaction(NodeMixin):
 
-    def __init__(self, timestamp=None, weighting=None,
+    def __init__(self, id_, timestamp=None, weighting=None,
                  learner_response=None, result=None,
                  latency=None, description=None,
                  objectives=(), correct_responses=None):
+        self.id = id_
         self.result = result
         self.latency = latency
         self.timestamp = timestamp
@@ -201,7 +203,8 @@ class Interaction(object):
         correct_responses = []
         for n in getChildren(node, 'correct_responses', 'response') or ():
             correct_responses.append(Response.fromMinidom(n))
-        return cls(getChildTextOrCDATA(node, 'timestamp'),
+        return cls(getAttributeValue(node, 'id'),
+                   getChildTextOrCDATA(node, 'timestamp'),
                    getChildTextOrCDATA(node, 'weighting'),
                    getChildTextOrCDATA(node, 'learner_response'),
                    getChildTextOrCDATA(node, 'result'),
@@ -211,7 +214,7 @@ class Interaction(object):
                    correct_responses or ())
 
 
-class LearnerPreference(object):
+class LearnerPreference(NodeMixin):
 
     def __init__(self, audio_level=None, language=None,
                  delivery_speed=None, audio_captioning=None):
@@ -228,20 +231,46 @@ class LearnerPreference(object):
                    getChildTextOrCDATA(node, 'audio_captioning'))
 
 
-class Runtime(object):
+class Static(NodeMixin):
+
+    def __init__(self, completion_threshold=None, launch_data=None,
+                 learner_id=None, learner_name=None, max_time_allowed=None,
+                 scaled_passing_score=None, time_limit_action=None):
+        self.learner_id = learner_id
+        self.launch_data = launch_data
+        self.learner_name = learner_name
+        self.max_time_allowed = max_time_allowed
+        self.time_limit_action = time_limit_action
+        self.completion_threshold = completion_threshold
+        self.scaled_passing_score = scaled_passing_score
+
+    @classmethod
+    def fromMinidom(cls, node):
+        return cls(getChildTextOrCDATA(node, 'completion_threshold'),
+                   getChildTextOrCDATA(node, 'launch_data'),
+                   getChildTextOrCDATA(node, 'learner_id'),
+                   getChildTextOrCDATA(node, 'learner_name'),
+                   getChildTextOrCDATA(node, 'max_time_allowed'),
+                   getChildTextOrCDATA(node, 'scaled_passing_score'),
+                   getChildTextOrCDATA(node, 'time_limit_action'))
+
+                    
+class Runtime(NodeMixin):
 
     def __init__(self, completion_status=None, credit=None, entry=None,
                  exit_=None, location=None, mode=None, progress_measure=None,
                  score_scaled=None, score_raw=None, total_time=None,
                  timetracked=None, success_status=None, suspend_data=None,
-                 learnerpreference=None, comments_from_learner=(),
-                 comments_from_lms=(), interactions=()):
+                 learnerpreference=None, static=None, comments_from_learner=(),
+                 comments_from_lms=(), interactions=(), objectives=()):
         self.mode = mode
         self.exit = exit_
         self.entry = entry
         self.credit = credit
+        self.static = static
         self.location = location
         self.score_raw = score_raw
+        self.objectives = objectives
         self.total_time = total_time
         self.timetracked = timetracked
         self.interactions = interactions
@@ -257,7 +286,9 @@ class Runtime(object):
     @classmethod
     def fromMinidom(cls, node):
         pref = getFirstChild(node, 'learnerpreference')
-        learnerpreference = LearnerPreference.fromMinidom(node) if pref else None
+        learnerpreference = LearnerPreference.fromMinidom(pref) if pref else None
+        static = getFirstChild(node, 'static')
+        static = Static.fromMinidom(static) if pref else None
         comments_from_learner = []
         for n in getChildren(node, 'comments_from_learner', 'comment') or ():
             comments_from_learner.append(Comment.fromMinidom(n))
@@ -267,6 +298,9 @@ class Runtime(object):
         interactions = []
         for n in getChildren(node, 'interactions', 'interaction') or ():
             interactions.append(Interaction.fromMinidom(n))
+        objectives = []
+        for n in getChildren(node, 'objectives', 'objective') or ():
+            objectives.append(Objective.fromMinidom(n))
         return cls(getChildText(node, 'completion_status'),
                    getChildText(node, 'credit'),
                    getChildText(node, 'entry'),
@@ -281,12 +315,14 @@ class Runtime(object):
                    getChildText(node, 'success_status'),
                    getChildTextOrCDATA(node, 'suspend_data'),
                    learnerpreference,
-                   comments_from_learner,
-                   comments_from_lms,
-                   interactions)
+                   static,
+                   comments_from_learner or (),
+                   comments_from_lms or (),
+                   interactions or (),
+                   objectives or ())
 
 
-class Instance(object):
+class Instance(NodeMixin):
 
     def __init__(self, instanceId, courseVersion=None, updateDate=None):
         self.instanceId = instanceId
@@ -300,14 +336,13 @@ class Instance(object):
                    getChildTextOrCDATA(node, 'updateDate'))
 
 
-class Registration(object):
+class Registration(NodeMixin):
 
     def __init__(self, appId, registrationId, courseId,
                  courseTitle=None, lastCourseVersionLaunched=None,
                  learnerId=None, learnerFirstName=None, learnerLastName=None,
                  email=None, createDate=None, firstAccessDate=None, lastAccessDate=None,
                  completedDate=None, instances=()):
-
         self.appId = appId
         self.email = email
         self.courseId = courseId
@@ -370,14 +405,13 @@ class RegistrationReport(RegistrationMixin):
                    activity)
 
 
-class Objective(object):
+class Objective(NodeMixin):
 
     def __init__(self, id_, measurestatus=False, normalizedmeasure=0.0,
                  progressstatus=False, satisfiedstatus=False,
                  score_scaled=None, score_min=None, score_raw=None,
                  success_status=None, completion_status=None, progress_measure=None,
                  description=None):
-
         self.id = id_
         self.score_min = score_min
         self.score_raw = score_raw
@@ -407,7 +441,7 @@ class Objective(object):
                    getChildText(node, 'description'))
 
 
-class Activity(object):
+class Activity(NodeMixin):
 
     def __init__(self, id_, title, complete=None, success=None,
                  satisfied=False, completed=False, progressstatus=False, attempts=1,
