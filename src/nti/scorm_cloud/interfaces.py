@@ -190,6 +190,19 @@ class IRegistrationService(interface.Interface):
         :type regid: str
         """
 
+    def getRegistrationResult(regid, resultsformat=None, instanceid=None):
+        """
+        Gets information about the specified registration.
+
+        :param regid: the unique identifier for the registration
+        :param resultsformat: (optional) can be "course", "activity", or "full" to
+            determine the level of detail returned. The default is "course"
+        :param instanceid: the ID of a particular registration instance 
+        :type regid: str
+        :type resultsformat: str
+        :type instanceid: str
+        """
+
     def get_launch_url(regid, redirecturl, cssUrl=None, courseTags=None,
                        learnerTags=None, registrationTags=None):
         """
@@ -211,17 +224,6 @@ class IRegistrationService(interface.Interface):
         :type courseTags: list of str
         :type learnerTags: list of str
         :type registrationTags: list of str
-        """
-
-    def get_registration_result(regid, resultsformat):
-        """
-        Gets information about the specified registration.
-
-        :param regid: the unique identifier for the registration
-        :param resultsformat -- (optional) can be "course", "activity", or "full" to
-            determine the level of detail returned. The default is "course"
-        :type regid: str
-        :type resultsformat: str
         """
 
     def get_launch_history(regid):

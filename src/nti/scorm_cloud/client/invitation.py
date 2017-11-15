@@ -12,6 +12,7 @@ from zope import interface
 
 from nti.scorm_cloud.interfaces import IInvitationService
 
+from nti.scorm_cloud.client.mixins import NodeMixin
 from nti.scorm_cloud.client.mixins import RegistrationMixin
 
 from nti.scorm_cloud.client.request import ScormCloudError
@@ -150,7 +151,7 @@ class RegistrationReport(RegistrationMixin):
                    getChildText(node, 'score'))
 
 
-class UserInvitation(object):
+class UserInvitation(NodeMixin):
 
     def __init__(self, email, url=None, isStarted=None, registrationId=None,
                  registrationreport=None):
@@ -171,7 +172,7 @@ class UserInvitation(object):
                    report)
 
 
-class InvitationInfo(object):
+class InvitationInfo(NodeMixin):
 
     def __init__(self, id_, body=None, courseId=None, subject=None,
                  url=None, allowLaunch=True, allowNewRegistrations=True,

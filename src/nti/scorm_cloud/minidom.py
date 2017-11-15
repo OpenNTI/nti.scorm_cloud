@@ -31,39 +31,38 @@ def getTextOrCDATA(nodes=()):
     return getData(nodes, (Document.TEXT_NODE, Document.CDATA_SECTION_NODE))
 
 
+def getChildNodesByName(node, name):
+    result = []
+    for node in node.childNodes or ():
+        if      node.nodeType == node.ELEMENT_NODE \
+            and (name == "*" or node.tagName == name):
+            result.append(node)
+    return result
+
+
 def getChildText(node, name):
-    nodes = node.getElementsByTagName(name)
-    if nodes:
-        return getText(nodes[0].childNodes)
-    return None
+    nodes = getChildNodesByName(node, name)
+    return getText(nodes[0].childNodes) if nodes else None
 
 
 def getChildCDATA(node, name):
-    nodes = node.getElementsByTagName(name)
-    if nodes:
-        return getCDATA(nodes[0].childNodes)
-    return None
+    nodes = getChildNodesByName(node, name)
+    return getCDATA(nodes[0].childNodes) if nodes else None
 
 
 def getChildTextOrCDATA(node, name):
-    nodes = node.getElementsByTagName(name)
-    if nodes:
-        return getTextOrCDATA(nodes[0].childNodes)
-    return None
+    nodes = getChildNodesByName(node, name)
+    return getTextOrCDATA(nodes[0].childNodes) if nodes else None
 
 
 def getChildren(node, parent, child):
-    nodes = node.getElementsByTagName(parent)
-    if nodes:
-        return nodes[0].getElementsByTagName(child)
-    return None
+    nodes = getChildNodesByName(node, parent)
+    return getChildNodesByName(nodes[0], child) if nodes else None
 
 
 def getFirstChild(node, name):
-    nodes = node.getElementsByTagName(name)
-    if nodes:
-        return nodes[0]
-    return None
+    nodes = getChildNodesByName(node, name)
+    return nodes[0] if nodes else None
 
 
 def getAttributeValue(node, name):

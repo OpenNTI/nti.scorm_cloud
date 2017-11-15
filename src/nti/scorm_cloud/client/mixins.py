@@ -13,7 +13,13 @@ from nti.scorm_cloud.minidom import getAttributeValue
 logger = __import__('logging').getLogger(__name__)
 
 
-class RegistrationMixin(object):
+class NodeMixin(object):
+    """
+    Base class for objects derived from an xml source
+    """
+
+
+class RegistrationMixin(NodeMixin):
 
     def __init__(self, format_, regid=None, instanceid=None):
         self.regid = regid
