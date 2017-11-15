@@ -13,6 +13,15 @@ from nti.scorm_cloud.minidom import getAttributeValue
 logger = __import__('logging').getLogger(__name__)
 
 
+def nodecapture(f):
+    def wrapper(*args):
+        node = args[-1]
+        result = f(*args)
+        result._v_node = node
+        return result
+    return wrapper
+
+
 class NodeMixin(object):
     """
     Base class for objects derived from an xml source
@@ -27,7 +36,48 @@ class RegistrationMixin(NodeMixin):
         self.instanceid = instanceid
 
     @classmethod
+    @nodecapture
     def fromMinidom(cls, node):
         return cls(getAttributeValue(node, 'format'),
                    getAttributeValue(node, 'regid'),
                    getAttributeValue(node, 'instanceid'))
+
+
+def _type_name(self):
+    t = type(self)
+    type_name = t.__module__ + '.' + t.__name__
+    return type_name
+
+
+def _default_repr(self):
+    # When we're executing, even if we're wrapped in a proxy when called,
+    # we get an unwrapped self.
+    return "<%s at %x %s>" % (_type_name(self), id(self), self.__dict__)
+
+
+def make_repr(default=_default_repr):
+    def __repr__(self):
+        return default(self)
+    return __repr__
+
+
+def WithRepr(default=object()):
+    """
+    A class decorator factory to give a ``__repr__`` to
+    the object. Useful for persistent objects.
+
+    :keyword default: A callable to be used for the default value.
+    """
+
+    # If we get one argument that is a type, we were
+    # called bare (@WithRepr), so decorate the type
+    if isinstance(default, type):
+        default.__repr__ = make_repr()
+        return default
+
+    # If we got None or anything else, we were called as a factory,
+    # so return a decorator
+    def d(cls):
+        cls.__repr__ = make_repr(default)
+        return cls
+    return d
