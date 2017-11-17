@@ -61,8 +61,7 @@ class RegistrationService(object):
             request.parameters['urlpass'] = urlpass
         if resultsformat:
             request.parameters['resultsformat'] = resultsformat
-        xmldoc = request.call_service(
-            'rustici.registration.createRegistration')
+        xmldoc = request.call_service('rustici.registration.createRegistration')
         successNodes = xmldoc.getElementsByTagName('success')
         if not successNodes:
             raise ScormCloudError("Create Registration failed.")
@@ -106,8 +105,7 @@ class RegistrationService(object):
             request.parameters['after'] = after
         if until:
             request.parameters['until'] = until
-        xmldoc = request.call_service(
-            'rustici.registration.getRegistrationList')
+        xmldoc = request.call_service('rustici.registration.getRegistrationList')
         nodes = xmldoc.documentElement.getElementsByTagName('registration')
         return [Registration.fromMinidom(n) for n in nodes or ()]
     get_registration_list = getRegistrationList
@@ -115,8 +113,7 @@ class RegistrationService(object):
     def getRegistrationDetail(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
-        xmldoc = request.call_service(
-            'rustici.registration.getRegistrationDetail')
+        xmldoc = request.call_service('rustici.registration.getRegistrationDetail')
         nodes = xmldoc.getElementsByTagName('registration')
         return Registration.fromMinidom(nodes[0]) if nodes else None
     get_registration_detail = getRegistrationDetail
@@ -128,8 +125,7 @@ class RegistrationService(object):
             request.parameters['instanceid'] = instanceid
         if resultsformat:
             request.parameters['resultsformat'] = resultsformat
-        xmldoc = request.call_service(
-            'rustici.registration.getRegistrationResult')
+        xmldoc = request.call_service('rustici.registration.getRegistrationResult')
         nodes = xmldoc.getElementsByTagName('registrationreport')
         return RegistrationReport.fromMinidom(nodes[0]) if nodes else None
     get_registration_result = getRegistrationResult
@@ -148,8 +144,7 @@ class RegistrationService(object):
         if registrationTags:
             request.parameters['registrationTags'] = registrationTags
         if disableTracking:
-            request.parameters['disableTracking'] = str(
-                disableTracking).lower()
+            request.parameters['disableTracking'] = str(disableTracking).lower()
         if culture:
             request.parameters['culture'] = culture
         url = request.construct_url('rustici.registration.launch')
@@ -164,11 +159,22 @@ class RegistrationService(object):
         return LaunchHistory.fromMinidom(nodes[0]) if nodes else None
     get_launch_history = getLaunchHistory
 
-    def reset_global_objectives(self, regid):
+    def getLaunchInfo(self, launchid):
+        request = self.service.request()
+        request.parameters['launchid'] = launchid
+        xmldoc = request.call_service('rustici.registration.getLaunchInfo')
+        nodes = xmldoc.getElementsByTagName('launch')
+        return Launch.fromMinidom(nodes[0]) if nodes else None
+    get_launch_info= getLaunchInfo
+
+    def resetGlobalObjectives(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
-        return request.call_service('rustici.registration.resetGlobalObjectives')
-
+        xmldoc = request.call_service('rustici.registration.resetGlobalObjectives')
+        successNodes = xmldoc.getElementsByTagName('success')
+        if not successNodes:
+            raise ScormCloudError("Reset global objectives failed.")
+    reset_global_objectives = resetGlobalObjectives
 
 @WithRepr
 class Comment(NodeMixin):
@@ -314,8 +320,7 @@ class Runtime(NodeMixin):
     @nodecapture
     def fromMinidom(cls, node):
         pref = getFirstChild(node, 'learnerpreference')
-        learnerpreference = LearnerPreference.fromMinidom(
-            pref) if pref else None
+        learnerpref = LearnerPreference.fromMinidom(pref) if pref else None
         static = getFirstChild(node, 'static')
         static = Static.fromMinidom(static) if pref else None
         comments_from_learner = []
@@ -343,7 +348,7 @@ class Runtime(NodeMixin):
                    getChildText(node, 'timetracked'),
                    getChildText(node, 'success_status'),
                    getChildTextOrCDATA(node, 'suspend_data'),
-                   learnerpreference,
+                   learnerpref,
                    static,
                    comments_from_learner or (),
                    comments_from_lms or (),
@@ -528,15 +533,52 @@ class Activity(NodeMixin):
 
 
 @WithRepr
+class RuntimeEvent(NodeMixin):
+
+    def __init__(self, **kwargs):
+        for name, value in kwargs.items():
+            setattr(self, name, value)
+
+    @classmethod
+    @nodecapture
+    def fromMinidom(cls, node):
+        values = {}
+        for name, value in node.attributes.items():
+            values[name] = value
+        return cls(**values)
+
+
+@WithRepr
+class RuntimeLog(NodeMixin):
+
+    def __init__(self, events=(), **kwargs):
+        for name, value in kwargs.items():
+            setattr(self, name, value)
+        self.events = events
+
+    @classmethod
+    @nodecapture
+    def fromMinidom(cls, node):
+        values = {}
+        for name, value in node.attributes.items():
+            values[name] = value
+        events = []
+        for n in node.getElementsByTagName("RuntimeEvent") or ():
+            events.append(RuntimeEvent.fromMinidom(n))
+        return cls(events or (), **values)
+
+
+@WithRepr
 class Launch(NodeMixin):
 
     def __init__(self, id_, completion=None, satisfaction=None,
                  measure_status=None, normalized_measure=None, experienced_duration_tracked=None,
-                 launch_time=None, exit_time=None, update_dt=None):
+                 launch_time=None, exit_time=None, update_dt=None, runtimelog=None):
         self.id = id_
         self.exit_time = exit_time
         self.update_dt = update_dt
         self.completion = completion
+        self.runtimelog = runtimelog
         self.launch_time = launch_time
         self.satisfaction = satisfaction
         self.measure_status = measure_status
@@ -546,6 +588,9 @@ class Launch(NodeMixin):
     @classmethod
     @nodecapture
     def fromMinidom(cls, node):
+        log = getFirstChild(node, 'log')
+        runtimelog = getFirstChild(log, 'RuntimeLog') if log else None
+        runtimelog = RuntimeLog.fromMinidom(runtimelog) if runtimelog else None
         return cls(getAttributeValue(node, 'id'),
                    getChildText(node, 'completion'),
                    getChildText(node, 'satisfaction'),
@@ -554,7 +599,8 @@ class Launch(NodeMixin):
                    getChildText(node, 'experienced_duration_tracked'),
                    getChildText(node, 'launch_time'),
                    getChildText(node, 'exit_time'),
-                   getChildText(node, 'update_dt'))
+                   getChildText(node, 'update_dt'),
+                   runtimelog)
 
 
 @WithRepr

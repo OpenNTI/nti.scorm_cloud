@@ -241,7 +241,15 @@ class IRegistrationService(interface.Interface):
         :type regid: str
         """
 
-    def reset_global_objectives(regid):
+    def getLaunchInfo(launchid):
+        """
+        Fetch detailed historical data for the specified launch
+
+        :param launchid: the launch identifier
+        :type launchid: str
+        """
+
+    def resetGlobalObjectives(regid):
         """
         Clears global objective data for the specified registration.
 

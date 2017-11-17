@@ -123,7 +123,9 @@ class TestRegistrationService(unittest.TestCase):
         service = ScormCloudService.withargs("appid", "secret",
                                              "http://cloud.scorm.com/api")
         reg = service.get_registration_service()
-        url = reg.launch("regid", "http://www.myapp.com")
+        url = reg.launch("regid", "http://www.myapp.com", 
+                         "http://www.myapp.com/css.css",
+                         "mycourse", 'mylearner', 'myreg', True, 'en')
         assert_that(url, starts_with("http://cloud.scorm.com/api?"))
 
     @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
@@ -197,8 +199,9 @@ class TestRegistrationService(unittest.TestCase):
         data = fudge.Fake().has_attr(text=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
-
-        registrations = reg.getRegistrationList(after="2011-02-01T21:39:23Z")
+            
+        registrations = reg.getRegistrationList("mycourse", "learner@learn.org", 
+                                                "2011-02-01T21:39:23Z", "2011-03-01T21:39:23Z")
         assert_that(registrations, has_length(1))
 
         assert_that(registrations[0],
@@ -278,7 +281,7 @@ class TestRegistrationService(unittest.TestCase):
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
-        result = reg.getRegistrationResult("reg123")
+        result = reg.getRegistrationResult("reg123", )
         assert_that(result,
                     has_properties('complete', 'complete',
                                    'success', 'failed',
@@ -309,7 +312,7 @@ class TestRegistrationService(unittest.TestCase):
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
-        result = reg.getRegistrationResult("reg123")
+        result = reg.getRegistrationResult("reg123", 'course', '0')
         assert_that(result,
                     has_property('activity',
                                  has_properties('id', 'TOC1',
@@ -363,6 +366,9 @@ class TestRegistrationService(unittest.TestCase):
                             <date_time />
                         </comment>
                     </comments_from_learner>
+                    <comments_from_lms>
+                        <comment />
+                    </comments_from_lms>
                     <comments_from_lms />
                     <interactions>
                         <interaction id="1">
@@ -431,8 +437,7 @@ class TestRegistrationService(unittest.TestCase):
                                                                has_properties('learner_id', 'daveid',
                                                                               'learner_name', 'dave e',
                                                                               'time_limit_action', 'Undefined'),
-                                                               'objectives', has_length(
-                                                                   1),
+                                                               'objectives', has_length(1),
                                                                'interactions', has_length(1)))))
 
         assert_that(result.activity.objectives[0],
@@ -450,3 +455,57 @@ class TestRegistrationService(unittest.TestCase):
                     has_properties('id', "1",
                                    'objectives', has_length(1),
                                    'correct_responses', has_length(1)))
+        
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_launch_info(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+
+        reply = """
+        <launch id="d6f31a43">
+            <completion>complete</completion>
+            <satisfaction>failed</satisfaction>
+            <measure_status>1</measure_status>
+            <normalized_measure>0.2</normalized_measure>
+            <experienced_duration_tracked>2628</experienced_duration_tracked>
+            <launch_time>2011-04-05T19:06:37.780+0000</launch_time>
+            <exit_time>2011-04-05T19:07:06.616+0000</exit_time>
+            <update_dt>2011-04-05T19:07:06.616+0000</update_dt>
+            <log>
+                <RuntimeLog browser="Mozilla/4.0" version="2009.1.0.15538">
+                    <RuntimeEvent attemptNo="1" event="AttemptStart" id="0" itemIdentifier="golf_sample_default_org" timestamp="14:07:06.97" title="Golf Explained - Run-time Advanced Callz"/>
+                </RuntimeLog>
+            </log>
+        </launch>
+        """
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        result = reg.getLaunchInfo("d6f31a43")
+        assert_that(result,
+                    has_properties('id', 'd6f31a43',
+                                   'runtimelog', 
+                                   has_properties('browser', 'Mozilla/4.0',
+                                                  'events', has_length(1))))
+        
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_reset_global_objectives(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+
+        reply = '<rsp stat="ok"><success/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        reg.resetGlobalObjectives("bankai")
+        
+        reply = '<rsp stat="ok"><failed/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        with self.assertRaises(ScormCloudError):
+            reg.resetGlobalObjectives("bankai")
