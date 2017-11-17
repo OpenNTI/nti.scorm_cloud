@@ -122,10 +122,52 @@ class TestRegistrationService(unittest.TestCase):
     def test_get_launch_url(self):
         service = ScormCloudService.withargs("appid", "secret",
                                              "http://cloud.scorm.com/api")
-        reg = service.get_registration_service()        
+        reg = service.get_registration_service()
         url = reg.launch("regid", "http://www.myapp.com")
         assert_that(url, starts_with("http://cloud.scorm.com/api?"))
-        
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_launch_history(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+
+        reply = """
+        <launchhistory regid="e222daf6-6005-4344-a07e-0aaa46b21dc9">
+            <launch id="c7f31a43">
+                <completion>complete</completion>
+                <satisfaction>failed</satisfaction>
+                <measure_status>1</measure_status>
+                <normalized_measure>0.2</normalized_measure>
+                <experienced_duration_tracked>2628</experienced_duration_tracked>
+                <launch_time>2011-04-05T19:06:37.780+0000</launch_time>
+                <exit_time>2011-04-05T19:07:06.616+0000</exit_time>
+                <update_dt>2011-04-05T19:07:06.616+0000</update_dt>
+            </launch>
+        </launchhistory>
+        """
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        history = reg.getLaunchHistory("e222daf6-6005-4344-a07e-0aaa46b21dc9")
+        assert_that(history,
+                    has_properties('launches', has_length(1),
+                                   'regid', 'e222daf6-6005-4344-a07e-0aaa46b21dc9'))
+
+        launch = history.launches[0]
+        assert_that(launch,
+                    has_properties('id', 'c7f31a43',
+                                   'completion', 'complete',
+                                   'satisfaction', 'failed',
+                                   'measure_status', '1',
+                                   'normalized_measure', '0.2',
+                                   'experienced_duration_tracked', '2628',
+                                   'launch_time', '2011-04-05T19:06:37.780+0000',
+                                   'exit_time', '2011-04-05T19:07:06.616+0000',
+                                   'update_dt', '2011-04-05T19:07:06.616+0000'))
+
     @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
     def test_get_registration_list(self, mock_ss):
         service = ScormCloudService.withargs("appid", "secret",

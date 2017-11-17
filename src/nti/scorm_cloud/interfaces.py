@@ -231,7 +231,7 @@ class IRegistrationService(interface.Interface):
         :type registrationTags: list of str
         """
 
-    def get_launch_history(regid):
+    def getLaunchHistory(regid):
         """
         Retrieves a list of LaunchInfo objects describing each launch. These
         LaunchInfo objects do not contain the full launch history log; use

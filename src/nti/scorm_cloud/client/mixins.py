@@ -27,6 +27,10 @@ class NodeMixin(object):
     Base class for objects derived from an xml source
     """
 
+    @property
+    def _node(self):
+        return getattr(self, '_v_node', None)
+
 
 class RegistrationMixin(NodeMixin):
 

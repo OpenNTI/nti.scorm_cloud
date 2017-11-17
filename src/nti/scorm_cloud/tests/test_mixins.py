@@ -53,4 +53,4 @@ class TestMixins(unittest.TestCase):
                     has_properties('format', 'f',
                                    'regid', '123',
                                    'instanceid', '1',
-                                   '_v_node', is_not(none())))
+                                   '_node', is_not(none())))

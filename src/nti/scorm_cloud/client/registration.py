@@ -61,7 +61,8 @@ class RegistrationService(object):
             request.parameters['urlpass'] = urlpass
         if resultsformat:
             request.parameters['resultsformat'] = resultsformat
-        xmldoc = request.call_service('rustici.registration.createRegistration')
+        xmldoc = request.call_service(
+            'rustici.registration.createRegistration')
         successNodes = xmldoc.getElementsByTagName('success')
         if not successNodes:
             raise ScormCloudError("Create Registration failed.")
@@ -79,7 +80,8 @@ class RegistrationService(object):
     def deleteRegistration(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
-        xmldoc = request.call_service('rustici.registration.deleteRegistration')
+        xmldoc = request.call_service(
+            'rustici.registration.deleteRegistration')
         successNodes = xmldoc.getElementsByTagName('success')
         if not successNodes:
             raise ScormCloudError("Delete Registration failed.")
@@ -104,7 +106,8 @@ class RegistrationService(object):
             request.parameters['after'] = after
         if until:
             request.parameters['until'] = until
-        xmldoc = request.call_service('rustici.registration.getRegistrationList')
+        xmldoc = request.call_service(
+            'rustici.registration.getRegistrationList')
         nodes = xmldoc.documentElement.getElementsByTagName('registration')
         return [Registration.fromMinidom(n) for n in nodes or ()]
     get_registration_list = getRegistrationList
@@ -112,7 +115,8 @@ class RegistrationService(object):
     def getRegistrationDetail(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
-        xmldoc = request.call_service('rustici.registration.getRegistrationDetail')
+        xmldoc = request.call_service(
+            'rustici.registration.getRegistrationDetail')
         nodes = xmldoc.getElementsByTagName('registration')
         return Registration.fromMinidom(nodes[0]) if nodes else None
     get_registration_detail = getRegistrationDetail
@@ -124,7 +128,8 @@ class RegistrationService(object):
             request.parameters['instanceid'] = instanceid
         if resultsformat:
             request.parameters['resultsformat'] = resultsformat
-        xmldoc = request.call_service('rustici.registration.getRegistrationResult')
+        xmldoc = request.call_service(
+            'rustici.registration.getRegistrationResult')
         nodes = xmldoc.getElementsByTagName('registrationreport')
         return RegistrationReport.fromMinidom(nodes[0]) if nodes else None
     get_registration_result = getRegistrationResult
@@ -143,17 +148,21 @@ class RegistrationService(object):
         if registrationTags:
             request.parameters['registrationTags'] = registrationTags
         if disableTracking:
-            request.parameters['disableTracking'] = str(disableTracking).lower()
+            request.parameters['disableTracking'] = str(
+                disableTracking).lower()
         if culture:
             request.parameters['culture'] = culture
         url = request.construct_url('rustici.registration.launch')
         return url
     get_launch_url = getLaunchURL = launch
-    
-    def get_launch_history(self, regid):
+
+    def getLaunchHistory(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
-        return request.call_service('rustici.registration.getLaunchHistory')
+        xmldoc = request.call_service('rustici.registration.getLaunchHistory')
+        nodes = xmldoc.getElementsByTagName('launchhistory')
+        return LaunchHistory.fromMinidom(nodes[0]) if nodes else None
+    get_launch_history = getLaunchHistory
 
     def reset_global_objectives(self, regid):
         request = self.service.request()
@@ -272,7 +281,7 @@ class Static(NodeMixin):
                    getChildTextOrCDATA(node, 'time_limit_action'))
 
 
-@WithRepr           
+@WithRepr
 class Runtime(NodeMixin):
 
     def __init__(self, completion_status=None, credit=None, entry=None,
@@ -305,7 +314,8 @@ class Runtime(NodeMixin):
     @nodecapture
     def fromMinidom(cls, node):
         pref = getFirstChild(node, 'learnerpreference')
-        learnerpreference = LearnerPreference.fromMinidom(pref) if pref else None
+        learnerpreference = LearnerPreference.fromMinidom(
+            pref) if pref else None
         static = getFirstChild(node, 'static')
         static = Static.fromMinidom(static) if pref else None
         comments_from_learner = []
@@ -515,3 +525,50 @@ class Activity(NodeMixin):
                    objectives or (),
                    children or (),
                    runtime)
+
+
+@WithRepr
+class Launch(NodeMixin):
+
+    def __init__(self, id_, completion=None, satisfaction=None,
+                 measure_status=None, normalized_measure=None, experienced_duration_tracked=None,
+                 launch_time=None, exit_time=None, update_dt=None):
+        self.id = id_
+        self.exit_time = exit_time
+        self.update_dt = update_dt
+        self.completion = completion
+        self.launch_time = launch_time
+        self.satisfaction = satisfaction
+        self.measure_status = measure_status
+        self.normalized_measure = normalized_measure
+        self.experienced_duration_tracked = experienced_duration_tracked
+
+    @classmethod
+    @nodecapture
+    def fromMinidom(cls, node):
+        return cls(getAttributeValue(node, 'id'),
+                   getChildText(node, 'completion'),
+                   getChildText(node, 'satisfaction'),
+                   getChildText(node, 'measure_status'),
+                   getChildText(node, 'normalized_measure'),
+                   getChildText(node, 'experienced_duration_tracked'),
+                   getChildText(node, 'launch_time'),
+                   getChildText(node, 'exit_time'),
+                   getChildText(node, 'update_dt'))
+
+
+@WithRepr
+class LaunchHistory(NodeMixin):
+
+    def __init__(self, regid, launches=()):
+        self.regid = regid
+        self.launches = launches
+
+    @classmethod
+    @nodecapture
+    def fromMinidom(cls, node):
+        launches = []
+        for n in node.getElementsByTagName("launch") or ():
+            launches.append(Launch.fromMinidom(n))
+        return cls(getAttributeValue(node, 'regid'),
+                   launches or ())
