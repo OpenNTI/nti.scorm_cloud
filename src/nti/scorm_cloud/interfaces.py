@@ -203,8 +203,8 @@ class IRegistrationService(interface.Interface):
         :type instanceid: str
         """
 
-    def get_launch_url(regid, redirecturl, cssUrl=None, courseTags=None,
-                       learnerTags=None, registrationTags=None):
+    def launch(regid, redirecturl, cssUrl=None, courseTags=None,
+               learnerTags=None, registrationTags=None, disableTracking=False, culture=None):
         """
         Gets the URL to directly launch the course in a web browser.
 
@@ -212,17 +212,22 @@ class IRegistrationService(interface.Interface):
         :param redirecturl: the URL to which the SCORM player will redirect upon
             course exit
         :param cssUrl: the URL to a custom stylesheet
-        :param courseTags -- comma-delimited list of tags to associate with the
+        :param courseTags: comma-delimited list of tags to associate with the
             launched course
-        :param learnerTags -- comma-delimited list of tags to associate with the
+        :param learnerTags: comma-delimited list of tags to associate with the
             learner launching the course
-        :param registrationTags -- comma-delimited list of tags to associate with the
+        :param registrationTags: comma-delimited list of tags to associate with the
             launched registration
+        :param disableTracking: if set to True the registration will be launched with tracking disabled, 
+            and the launch will not result in any changes to the registration
+        :param culture: culture code
         :type regid: str
         :type redirecturl: str
         :type cssUrl: str
         :type courseTags: list of str
         :type learnerTags: list of str
+        :type disableTracking: bool
+        :type disableTracking: code
         :type registrationTags: list of str
         """
 

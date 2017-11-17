@@ -129,8 +129,8 @@ class RegistrationService(object):
         return RegistrationReport.fromMinidom(nodes[0]) if nodes else None
     get_registration_result = getRegistrationResult
 
-    def get_launch_url(self, regid, redirecturl, cssUrl=None, courseTags=None,
-                       learnerTags=None, registrationTags=None):
+    def launch(self, regid, redirecturl, cssUrl=None, courseTags=None,
+               learnerTags=None, registrationTags=None, disableTracking=False, culture=None):
         request = self.service.request()
         request.parameters['regid'] = regid
         request.parameters['redirecturl'] = redirecturl + '?regid=' + regid
@@ -142,9 +142,14 @@ class RegistrationService(object):
             request.parameters['learnertags'] = learnerTags
         if registrationTags:
             request.parameters['registrationTags'] = registrationTags
+        if disableTracking:
+            request.parameters['disableTracking'] = str(disableTracking).lower()
+        if culture:
+            request.parameters['culture'] = culture
         url = request.construct_url('rustici.registration.launch')
         return url
-
+    get_launch_url = getLaunchURL = launch
+    
     def get_launch_history(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid

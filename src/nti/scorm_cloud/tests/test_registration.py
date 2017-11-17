@@ -12,6 +12,7 @@ from hamcrest import is_
 from hamcrest import not_none
 from hamcrest import has_length
 from hamcrest import assert_that
+from hamcrest import starts_with
 from hamcrest import has_property
 from hamcrest import has_properties
 
@@ -118,6 +119,13 @@ class TestRegistrationService(unittest.TestCase):
         with self.assertRaises(ScormCloudError):
             reg.resetRegistration("bankai")
 
+    def test_get_launch_url(self):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()        
+        url = reg.launch("regid", "http://www.myapp.com")
+        assert_that(url, starts_with("http://cloud.scorm.com/api?"))
+        
     @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
     def test_get_registration_list(self, mock_ss):
         service = ScormCloudService.withargs("appid", "secret",
