@@ -695,3 +695,16 @@ class IReportingService(interface.Interface):
         :param widgettype: the widget type desired (for example, learnerSummary)
         :param widgetSettings: the :class:`IWidgetSettings` object for the widget type
         """
+
+
+class IUnmarshalled(interface.Interface):
+    
+    _node = interface.Attribute('Minidom node object')
+    
+    def fromMinidom(node):
+        """
+        Construct an instance of this object using the minidom source node
+        
+        :param node: Minodom node
+        :return: A new instance of the implementer object
+        """
