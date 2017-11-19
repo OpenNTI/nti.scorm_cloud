@@ -509,3 +509,24 @@ class TestRegistrationService(unittest.TestCase):
         mock_ss.is_callable().returns(session)
         with self.assertRaises(ScormCloudError):
             reg.resetGlobalObjectives("bankai")
+            
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_update_learner_info(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+
+        reply = '<rsp stat="ok"><success/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        reg.updateLearnerInfo("myleaner", "ichigo", "kurosaki", 
+                              "ichigo", "ichigo@bleach.org")
+        
+        reply = '<rsp stat="ok"><failed/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        with self.assertRaises(ScormCloudError):
+            reg.updateLearnerInfo("myleaner", "ichigo", "kurosaki")

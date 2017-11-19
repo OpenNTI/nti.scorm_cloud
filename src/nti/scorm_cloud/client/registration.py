@@ -175,6 +175,22 @@ class RegistrationService(object):
         if not successNodes:
             raise ScormCloudError("Reset global objectives failed.")
     reset_global_objectives = resetGlobalObjectives
+    
+    def updateLearnerInfo(self, learnerid, fname, lname, newid=None, email=None):
+        request = self.service.request()
+        request.parameters['learnerid'] = learnerid
+        request.parameters['fname'] = fname
+        request.parameters['lname'] = lname
+        if newid:
+            request.parameters['newid'] = newid
+        if email:
+            request.parameters['email'] = email
+        xmldoc = request.call_service('rustici.registration.updateLearnerInfo')
+        successNodes = xmldoc.getElementsByTagName('success')
+        if not successNodes:
+            raise ScormCloudError("Update learner information failed.")
+    update_learner_info = updateLearnerInfo
+
 
 @WithRepr
 class Comment(NodeMixin):

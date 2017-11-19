@@ -257,6 +257,22 @@ class IRegistrationService(interface.Interface):
         :type regid: str
         """
 
+    def updateLearnerInfo(learnerid, fname, lname, newid=None, email=None):
+        """
+        Update the learner information that was given during previous createRegistration calls.
+        
+        :param learnerid: The id of the learner whose info is being updated
+        :param fname: the first name of the learner
+        :param lname: the last name of the learner
+        :param newid: the new id to assign to this learner
+        :param email: the email of the learner
+
+        :type learnerid: str
+        :type fname: str
+        :type fname: str
+        :type newid: str
+        :type email: str
+        """
 
 class IInvitationService(interface.Interface):
     """
