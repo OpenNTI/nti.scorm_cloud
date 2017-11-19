@@ -8,13 +8,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-from six.moves.urllib_parse import quote
-
 from zope import interface
 
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IUploadService
-from nti.scorm_cloud.interfaces import IWidgetSettings
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -139,55 +136,6 @@ class CourseService(object):
         for an in attrNodes or ():
             atts[an.attributes['name'].value] = an.attributes['value'].value
         return atts
-
-
-@interface.implementer(IWidgetSettings)
-class WidgetSettings(object):
-
-    def __init__(self, dateRangeSettings=None, tagSettings=None):
-        self.tagSettings = tagSettings
-        self.dateRangeSettings = dateRangeSettings
-
-        self.courseId = None
-        self.learnerId = None
-
-        self.showTitle = True
-        self.vertical = False
-        self.public = True
-        self.standalone = True
-        self.iframe = False
-        self.expand = True
-        self.scriptBased = True
-
-        self.divname = u''
-        self.embedded = True
-        self.viewall = True
-        self.export = True
-
-    def get_url_encoding(self):
-        widgetUrlStr = ''
-        if self.courseId:
-            widgetUrlStr += '&courseId=' + quote(self.courseId)
-        if self.learnerId:
-            widgetUrlStr += '&learnerId=' + quote(self.learnerId)
-
-        widgetUrlStr += '&showTitle=' + str(self.showTitle).lower()
-        widgetUrlStr += '&standalone=' + str(self.standalone).lower()
-        if self.iframe:
-            widgetUrlStr += '&iframe=true'
-        widgetUrlStr += '&expand=' + str(self.expand).lower()
-        widgetUrlStr += '&scriptBased=' + str(self.scriptBased).lower()
-        widgetUrlStr += '&divname=' + quote(self.divname)
-        widgetUrlStr += '&vertical=' + str(self.vertical).lower()
-        widgetUrlStr += '&embedded=' + str(self.embedded).lower()
-
-        if self.dateRangeSettings is not None:
-            widgetUrlStr += self.dateRangeSettings.get_url_encoding()
-
-        if self.tagSettings is not None:
-            widgetUrlStr += self.tagSettings.get_url_encoding()
-
-        return widgetUrlStr
 
 
 class ImportResult(object):
