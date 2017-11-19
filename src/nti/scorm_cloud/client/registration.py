@@ -79,6 +79,7 @@ class RegistrationService(object):
     def deleteRegistration(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
+        request.parameters['appid'] = self.service.config.appid
         xmldoc = request.call_service(
             'rustici.registration.deleteRegistration')
         successNodes = xmldoc.getElementsByTagName('success')
@@ -89,6 +90,7 @@ class RegistrationService(object):
     def resetRegistration(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
+        request.parameters['appid'] = self.service.config.appid
         xmldoc = request.call_service('rustici.registration.resetRegistration')
         successNodes = xmldoc.getElementsByTagName('success')
         if not successNodes:
@@ -97,6 +99,7 @@ class RegistrationService(object):
 
     def getRegistrationList(self, courseid=None, learnerid=None, after=None, until=None):
         request = self.service.request()
+        request.parameters['appid'] = self.service.config.appid
         if courseid:
             request.parameters['courseid'] = courseid
         if learnerid:
@@ -113,6 +116,7 @@ class RegistrationService(object):
     def getRegistrationDetail(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
+        request.parameters['appid'] = self.service.config.appid
         xmldoc = request.call_service('rustici.registration.getRegistrationDetail')
         nodes = xmldoc.getElementsByTagName('registration')
         return Registration.fromMinidom(nodes[0]) if nodes else None
@@ -121,6 +125,7 @@ class RegistrationService(object):
     def getRegistrationResult(self, regid, resultsformat=None, instanceid=None):
         request = self.service.request()
         request.parameters['regid'] = regid
+        request.parameters['appid'] = self.service.config.appid
         if instanceid:
             request.parameters['instanceid'] = instanceid
         if resultsformat:
@@ -134,6 +139,7 @@ class RegistrationService(object):
                learnerTags=None, registrationTags=None, disableTracking=False, culture=None):
         request = self.service.request()
         request.parameters['regid'] = regid
+        request.parameters['appid'] = self.service.config.appid
         request.parameters['redirecturl'] = redirecturl + '?regid=' + regid
         if cssUrl:
             request.parameters['cssurl'] = cssUrl
@@ -154,6 +160,7 @@ class RegistrationService(object):
     def getLaunchHistory(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
+        request.parameters['appid'] = self.service.config.appid
         xmldoc = request.call_service('rustici.registration.getLaunchHistory')
         nodes = xmldoc.getElementsByTagName('launchhistory')
         return LaunchHistory.fromMinidom(nodes[0]) if nodes else None
@@ -162,25 +169,28 @@ class RegistrationService(object):
     def getLaunchInfo(self, launchid):
         request = self.service.request()
         request.parameters['launchid'] = launchid
+        request.parameters['appid'] = self.service.config.appid
         xmldoc = request.call_service('rustici.registration.getLaunchInfo')
         nodes = xmldoc.getElementsByTagName('launch')
         return Launch.fromMinidom(nodes[0]) if nodes else None
-    get_launch_info= getLaunchInfo
+    get_launch_info = getLaunchInfo
 
     def resetGlobalObjectives(self, regid):
         request = self.service.request()
         request.parameters['regid'] = regid
+        request.parameters['appid'] = self.service.config.appid
         xmldoc = request.call_service('rustici.registration.resetGlobalObjectives')
         successNodes = xmldoc.getElementsByTagName('success')
         if not successNodes:
             raise ScormCloudError("Reset global objectives failed.")
     reset_global_objectives = resetGlobalObjectives
-    
+
     def updateLearnerInfo(self, learnerid, fname, lname, newid=None, email=None):
         request = self.service.request()
         request.parameters['learnerid'] = learnerid
         request.parameters['fname'] = fname
         request.parameters['lname'] = lname
+        request.parameters['appid'] = self.service.config.appid
         if newid:
             request.parameters['newid'] = newid
         if email:
@@ -191,7 +201,49 @@ class RegistrationService(object):
             raise ScormCloudError("Update learner information failed.")
     update_learner_info = updateLearnerInfo
 
+    def getPostbackInfo(self, regid):
+        request = self.service.request()
+        request.parameters['regid'] = regid
+        request.parameters['appid'] = self.service.config.appid
+        xmldoc = request.call_service('rustici.registration.getPostbackInfo')
+        nodes = xmldoc.getElementsByTagName('postbackinfo')
+        return PostbackInfo.fromMinidom(nodes[0]) if nodes else None
+    get_postback_info = getPostbackInfo
 
+    def updatePostbackInfo(self, regid, url, name=None, password=None,
+                           authtype=None, resultsformat=None):
+        request = self.service.request()
+        request.parameters['regid'] = regid
+        request.parameters['appid'] = self.service.config.appid
+        if url:
+            request.parameters['url'] = url
+        if authtype:
+            request.parameters['authtype'] = authtype
+        if name:
+            request.parameters['name'] = name
+        if password:
+            request.parameters['password'] = password
+        if resultsformat:
+            request.parameters['resultsformat'] = resultsformat
+        xmldoc = request.call_service('rustici.registration.updatePostbackInfo')
+        successNodes = xmldoc.getElementsByTagName('success')
+        if not successNodes:
+            raise ScormCloudError("Update Postback info failed.")
+        return regid
+    update_postback_info = getPostbackInfo
+
+    def deletePostbackInfo(self, regid):
+        request = self.service.request()
+        request.parameters['regid'] = regid
+        request.parameters['appid'] = self.service.config.appid
+        xmldoc = request.call_service('rustici.registration.deletePostbackInfo')
+        successNodes = xmldoc.getElementsByTagName('success')
+        if not successNodes:
+            raise ScormCloudError("Postback info deletion failed.")
+        return regid
+    delete_postback_info = deletePostbackInfo
+
+        
 @WithRepr
 class Comment(NodeMixin):
 
@@ -634,3 +686,23 @@ class LaunchHistory(NodeMixin):
             launches.append(Launch.fromMinidom(n))
         return cls(getAttributeValue(node, 'regid'),
                    launches or ())
+
+
+@WithRepr
+class PostbackInfo(NodeMixin):
+
+    def __init__(self, regid, url=None, authtype=None, login=None, password=None):
+        self.url = url
+        self.login = login
+        self.regid = regid
+        self.authtype = authtype
+        self.password = password
+
+    @classmethod
+    @nodecapture
+    def fromMinidom(cls, node):
+        return cls(getAttributeValue(node, 'regid'),
+                   getChildText(node, 'url'),
+                   getChildText(node, 'authtype'),
+                   getChildText(node, 'login'),
+                   getChildText(node, 'password'),)

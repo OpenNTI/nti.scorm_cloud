@@ -273,6 +273,42 @@ class IRegistrationService(interface.Interface):
         :type newid: str
         :type email: str
         """
+    
+    def getPostbackInfo(regid):
+        """
+        Provides a way to retrieve the postback attributes
+        
+        :param regid: the unique identifier for the registration
+        :type regid: str
+        """
+
+    def updatePostbackInfo(regid, url, name=None, password=None, authtype=None, resultsformat=None):
+        """
+        Provides a way to update the postback settings for a registration
+        
+        :param regid: the unique identifier for the registration
+        :param url: URL for registration results to be posted to
+        :param name: auth name for the postback.
+        :param password: credentials for the postbackurl 
+        :param authtype: type of authentication used
+        :param resultsformat: level of detail in the information that is posted back 
+            while the course is being taken
+        :type regid: str
+        :type url: str
+        :type name: str
+        :type password: str
+        :type authtype: str
+        :type resultsformat: str
+        """
+ 
+    def deletePostbackInfo(regid):
+        """
+        Clear postback settings so that registration results no longer invoke a postback url.
+        
+        :param regid: the unique identifier for the registration
+        :type regid: str
+        """
+
 
 class IInvitationService(interface.Interface):
     """

@@ -123,7 +123,7 @@ class TestRegistrationService(unittest.TestCase):
         service = ScormCloudService.withargs("appid", "secret",
                                              "http://cloud.scorm.com/api")
         reg = service.get_registration_service()
-        url = reg.launch("regid", "http://www.myapp.com", 
+        url = reg.launch("regid", "http://www.myapp.com",
                          "http://www.myapp.com/css.css",
                          "mycourse", 'mylearner', 'myreg', True, 'en')
         assert_that(url, starts_with("http://cloud.scorm.com/api?"))
@@ -199,8 +199,8 @@ class TestRegistrationService(unittest.TestCase):
         data = fudge.Fake().has_attr(text=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
-            
-        registrations = reg.getRegistrationList("mycourse", "learner@learn.org", 
+
+        registrations = reg.getRegistrationList("mycourse", "learner@learn.org",
                                                 "2011-02-01T21:39:23Z", "2011-03-01T21:39:23Z")
         assert_that(registrations, has_length(1))
 
@@ -455,13 +455,12 @@ class TestRegistrationService(unittest.TestCase):
                     has_properties('id', "1",
                                    'objectives', has_length(1),
                                    'correct_responses', has_length(1)))
-        
+
     @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
     def test_get_launch_info(self, mock_ss):
         service = ScormCloudService.withargs("appid", "secret",
                                              "http://cloud.scorm.com/api")
         reg = service.get_registration_service()
-
         reply = """
         <launch id="d6f31a43">
             <completion>complete</completion>
@@ -486,10 +485,10 @@ class TestRegistrationService(unittest.TestCase):
         result = reg.getLaunchInfo("d6f31a43")
         assert_that(result,
                     has_properties('id', 'd6f31a43',
-                                   'runtimelog', 
+                                   'runtimelog',
                                    has_properties('browser', 'Mozilla/4.0',
                                                   'events', has_length(1))))
-        
+
     @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
     def test_reset_global_objectives(self, mock_ss):
         service = ScormCloudService.withargs("appid", "secret",
@@ -502,14 +501,14 @@ class TestRegistrationService(unittest.TestCase):
         mock_ss.is_callable().returns(session)
 
         reg.resetGlobalObjectives("bankai")
-        
+
         reply = '<rsp stat="ok"><failed/></rsp>'
         data = fudge.Fake().has_attr(text=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
         with self.assertRaises(ScormCloudError):
             reg.resetGlobalObjectives("bankai")
-            
+
     @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
     def test_update_learner_info(self, mock_ss):
         service = ScormCloudService.withargs("appid", "secret",
@@ -521,12 +520,78 @@ class TestRegistrationService(unittest.TestCase):
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
-        reg.updateLearnerInfo("myleaner", "ichigo", "kurosaki", 
+        reg.updateLearnerInfo("myleaner", "ichigo", "kurosaki",
                               "ichigo", "ichigo@bleach.org")
-        
+
         reply = '<rsp stat="ok"><failed/></rsp>'
         data = fudge.Fake().has_attr(text=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
         with self.assertRaises(ScormCloudError):
             reg.updateLearnerInfo("myleaner", "ichigo", "kurosaki")
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_postback_info(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+        reply = """
+        <postbackinfo regid="reg001">
+            <url>https://example</url>
+            <authtype>form</authtype>
+            <login>user1</login>
+            <password>password</password>
+        </postbackinfo>
+        """
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        result = reg.getPostbackInfo("reg001")
+        assert_that(result,
+                    has_properties('regid', 'reg001',
+                                   'url', "https://example",
+                                   'authtype', 'form',
+                                   'login', 'user1',
+                                   'password', 'password'))
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_update_postback_info(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+
+        reply = '<rsp stat="ok"><success/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        reg.updatePostbackInfo("myregid", " https://example", "user1", "password",
+                               "form", "course")
+
+        reply = '<rsp stat="ok"><failed/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        with self.assertRaises(ScormCloudError):
+            reg.updatePostbackInfo("myregid", " https://example")
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_delete_postback_info(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        reg = service.get_registration_service()
+
+        reply = '<rsp stat="ok"><success/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        reg.deletePostbackInfo("myregid")
+
+        reply = '<rsp stat="ok"><failed/></rsp>'
+        data = fudge.Fake().has_attr(text=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        with self.assertRaises(ScormCloudError):
+            reg.deletePostbackInfo("myregid")
