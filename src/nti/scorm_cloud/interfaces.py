@@ -13,7 +13,6 @@ from zope import interface
 from zope.schema import Bool
 from zope.schema import Object
 from zope.schema import TextLine
-from gevent.ares import node
 
 
 class IScormCloudService(interface.Interface):
