@@ -13,6 +13,7 @@ from zope import interface
 from zope.schema import Bool
 from zope.schema import Object
 from zope.schema import TextLine
+from gevent.ares import node
 
 
 class IScormCloudService(interface.Interface):
@@ -694,4 +695,17 @@ class IReportingService(interface.Interface):
             get_reportage_auth
         :param widgettype: the widget type desired (for example, learnerSummary)
         :param widgetSettings: the :class:`IWidgetSettings` object for the widget type
+        """
+
+
+class IUnmarshalled(interface.Interface):
+    
+    _node = interface.Attribute('Minidom node object')
+    
+    def fromMinidom(node):
+        """
+        Construct an instance of this object using the minidom source node
+        
+        :param node: Minodom node
+        :return: A new instance of the implementer object
         """

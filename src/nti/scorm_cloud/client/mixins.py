@@ -8,6 +8,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from zope import interface
+
+from nti.scorm_cloud.interfaces import IUnmarshalled
+
 from nti.scorm_cloud.minidom import getAttributeValue
 
 logger = __import__('logging').getLogger(__name__)
@@ -22,6 +26,7 @@ def nodecapture(f):
     return wrapper
 
 
+@interface.implementer(IUnmarshalled)
 class NodeMixin(object):
     """
     Base class for objects derived from an xml source
