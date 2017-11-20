@@ -8,6 +8,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+import six
+from io import BytesIO
+
 from zope import interface
 
 from nti.scorm_cloud.interfaces import IUnmarshalled
@@ -90,3 +93,14 @@ def WithRepr(default=object()):
         cls.__repr__ = make_repr(default)
         return cls
     return d
+
+
+def get_source(context):
+    if hasattr(context, 'read'):
+        return context
+    elif isinstance(context, bytes):
+        return BytesIO(context)
+    elif isinstance(context, six.string_types):
+        with open(context, "r") as fp:
+            return BytesIO(fp.read())
+    raise ValueError("Invalid context source")

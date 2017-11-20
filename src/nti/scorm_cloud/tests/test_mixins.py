@@ -16,6 +16,7 @@ from hamcrest import has_properties
 from hamcrest import contains_string
 
 import unittest
+from io import BytesIO
 
 from xml.dom import minidom
 
@@ -54,3 +55,13 @@ class TestMixins(unittest.TestCase):
                                    'regid', '123',
                                    'instanceid', '1',
                                    '_node', is_not(none())))
+        
+    def test_get_source(self):
+        g = mixins.get_source(BytesIO(b'data'))
+        assert_that(g, is_(BytesIO))
+        
+        g = mixins.get_source(b'data')
+        assert_that(g, is_(BytesIO))
+
+        g = mixins.get_source(__file__)
+        assert_that(g, is_(BytesIO))
