@@ -54,7 +54,7 @@ class ScormCloudError(Exception):
 class ServiceRequest(object):
     """
     Helper object that handles the details of web service URLs and parameter
-    encoding and signing. Set the web service method parameters on the 
+    encoding and signing. Set the web service method parameters on the
     parameters attribute of the ServiceRequest object and then call
     call_service with the method name to make a service request.
     """
@@ -75,11 +75,8 @@ class ServiceRequest(object):
         serviceurl -- (optional) used to override the service host URL for a
             single call
         """
-        postparams = None
-        # if self.file_ is not None:
-        # TODO: Implement file upload
         url = self.construct_url(method, serviceurl)
-        rawresponse = self.send_post(url, postparams)
+        rawresponse = self.send_post(url, self.parameters)
         response = self.get_xml(rawresponse)
         return response
 
@@ -133,6 +130,9 @@ class ServiceRequest(object):
         session = self.session()
         if not postparams:
             reply = session.get(url).text
+        elif self.file_ is not None:
+            reply = session.post(url, postparams,
+                                 files={u'file': self.file_}).text
         else:
             reply = session.post(url, postparams).text
         return reply
