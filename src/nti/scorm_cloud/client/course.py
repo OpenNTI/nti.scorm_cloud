@@ -63,7 +63,8 @@ class CourseService(object):
     def import_uploaded_course(self, courseid, path):
         request = self.service.request()
         request.parameters['courseid'] = courseid
-        request.parameters['path'] = path
+        if isinstance(path, six.string_types):
+            request.file_ = open(path, 'rb')
         result = request.call_service('rustici.course.importCourse')
         result = ImportResult.list_from_result(result)
         return result
