@@ -8,9 +8,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-import six
-
 from zope import interface
+
+from nti.scorm_cloud.client.mixins import get_source
 
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IUploadService
@@ -65,12 +65,7 @@ class CourseService(object):
     def import_uploaded_course(self, courseid, path):
         request = self.service.request()
         request.parameters['courseid'] = courseid
-        if isinstance(path, six.string_types):
-            # File path
-            request.file_ = open(path, 'rb')
-        else:
-            # Stream
-            request.file_ = path
+        request.file_ = get_source(path)
         result = request.call_service('rustici.course.importCourse')
         result = ImportResult.list_from_result(result)
         return result
