@@ -55,13 +55,11 @@ class TestMixins(unittest.TestCase):
                                    'regid', '123',
                                    'instanceid', '1',
                                    '_node', is_not(none())))
-        
+
     def test_get_source(self):
         g = mixins.get_source(BytesIO(b'data'))
         assert_that(g, is_(BytesIO))
-        
-        g = mixins.get_source(b'data')
-        assert_that(g, is_(BytesIO))
 
-        g = mixins.get_source(__file__)
-        assert_that(g, is_(BytesIO))
+        path = __file__
+        g = mixins.get_source(path)
+        assert_that(g, is_(file))

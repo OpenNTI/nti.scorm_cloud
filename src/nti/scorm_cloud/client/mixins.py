@@ -9,7 +9,6 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import six
-from io import BytesIO
 
 from zope import interface
 
@@ -96,11 +95,11 @@ def WithRepr(default=object()):
 
 
 def get_source(context):
+    """
+    Handle either a stream or a path to a file.
+    """
     if hasattr(context, 'read'):
         return context
-    elif isinstance(context, bytes):
-        return BytesIO(context)
     elif isinstance(context, six.string_types):
-        with open(context, "r") as fp:
-            return BytesIO(fp.read())
+        return open(context, "rb")
     raise ValueError("Invalid context source")

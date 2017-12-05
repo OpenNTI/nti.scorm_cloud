@@ -78,6 +78,7 @@ class ServiceRequest(object):
         :type serviceurl: str
         :type serviceurl: dict
         """
+
         url = self.construct_url(method, serviceurl)
         rawresponse = self.send_post(url, postparams)
         response = self.get_xml(rawresponse)
@@ -142,11 +143,11 @@ class ServiceRequest(object):
         :type postparams: str
         """
         session = self.session()
-        if not postparams:
-            reply = session.get(url).text
-        elif self.file_ is not None:
+        if self.file_ is not None:
             reply = session.post(url, postparams,
                                  files={u'file': self.file_}).text
+        elif not postparams:
+            reply = session.get(url).text
         else:
             reply = session.post(url, postparams).text
         return reply
