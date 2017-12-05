@@ -14,7 +14,7 @@ from hashlib import md5
 from xml.dom import minidom
 
 from six import text_type
-from six.moves.urllib_parse import quote_plus
+from six.moves import urllib_parse
 
 from requests import Session
 
@@ -64,19 +64,22 @@ class ServiceRequest(object):
         self.service = service
         self.parameters = dict()
 
-    def call_service(self, method, serviceurl=None):
+    def call_service(self, method, serviceurl=None, postparams=None):
         """
         Calls the specified web service method using any parameters set on the
         ServiceRequest.
 
-        Arguments:
-        method -- the full name of the web service method to call.
+        :param method: the full name of the web service method to call.
             For example: rustici.registration.createRegistration
-        serviceurl -- (optional) used to override the service host URL for a
+        :param serviceurl: (optional) used to override the service host URL for a
             single call
+        :param postparams: (optional) POST request params
+        :type method: str
+        :type serviceurl: str
+        :type serviceurl: dict
         """
         url = self.construct_url(method, serviceurl)
-        rawresponse = self.send_post(url, self.parameters)
+        rawresponse = self.send_post(url, postparams)
         response = self.get_xml(rawresponse)
         return response
 
@@ -88,6 +91,8 @@ class ServiceRequest(object):
             For example: rustici.registration.createRegistration
         :param serviceurl: (optional) used to override the service host URL for a
             single call
+        :type method: str
+        :type serviceurl: str
         """
         params = {'method': method}
 
@@ -110,7 +115,8 @@ class ServiceRequest(object):
         Parses the raw response string as XML and asserts that there was no
         error in the result.
 
-        :param raw the raw response string from an API method call
+        :param raw: the raw response string from an API method call
+        :type raw: str
         """
         xmldoc = minidom.parseString(raw)
         rsp = xmldoc.documentElement
@@ -127,6 +133,14 @@ class ServiceRequest(object):
         return result
 
     def send_post(self, url, postparams=None):
+        """
+        Send request
+
+        :param url: request URL
+        :param postparams: (optional) POST request params
+        :type url: str
+        :type postparams: str
+        """
         session = self.session()
         if not postparams:
             reply = session.get(url).text
@@ -143,6 +157,7 @@ class ServiceRequest(object):
         given secret, if a secret was given.
 
         :param dictionary: the dictionary containing the key/value parameter pairs
+        :type dictionary: dict
         """
         dictionary['appid'] = self.service.config.appid
         dictionary['origin'] = self.service.config.origin
@@ -154,7 +169,7 @@ class ServiceRequest(object):
         secret = self.service.config.secret
         for key in sorted(dictionary.keys(), key=str.lower):
             signing.append(key + dictionary[key])
-            values.append(key + '=' + quote_plus(dictionary[key]))
+            values.append(key + '=' + urllib_parse.quote_plus(dictionary[key]))
         signing = bytes_(''.join(signing))
         values.append('sig=' + md5(secret + signing).hexdigest())
         return '&'.join(values)
