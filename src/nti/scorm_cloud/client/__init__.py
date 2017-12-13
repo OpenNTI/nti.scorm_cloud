@@ -10,7 +10,7 @@ from __future__ import absolute_import
 
 import datetime
 
-from six.moves.urllib_parse import quote
+from six.moves import urllib_parse
 
 try:
     from urllib2 import urlopen
@@ -183,7 +183,6 @@ class ReportingService(object):
             'learnerInteractions': 'DetailsWidget.php?drt=learnerInteractions',
             'learnerActivities': 'DetailsWidget.php?drt=learnerActivities',
             'courseRegistration': 'DetailsWidget.php?drt=courseRegistration',
-            'learnerRegistration': 'DetailsWidget.php?drt=learnerRegistration',
             'learnerCourseActivities': 'DetailsWidget.php?drt='
             'learnerCourseActivities',
             'learnerTranscript': 'DetailsWidget.php?drt=learnerTranscript',
@@ -227,9 +226,9 @@ class WidgetSettings(object):
     def get_url_encoding(self):
         widgetUrlStr = ''
         if self.courseId:
-            widgetUrlStr += '&courseId=' + quote(self.courseId)
+            widgetUrlStr += '&courseId=' + urllib_parse.quote(self.courseId)
         if self.learnerId:
-            widgetUrlStr += '&learnerId=' + quote(self.learnerId)
+            widgetUrlStr += '&learnerId=' + urllib_parse.quote(self.learnerId)
 
         widgetUrlStr += '&showTitle=' + str(self.showTitle).lower()
         widgetUrlStr += '&standalone=' + str(self.standalone).lower()
@@ -237,7 +236,7 @@ class WidgetSettings(object):
             widgetUrlStr += '&iframe=true'
         widgetUrlStr += '&expand=' + str(self.expand).lower()
         widgetUrlStr += '&scriptBased=' + str(self.scriptBased).lower()
-        widgetUrlStr += '&divname=' + quote(self.divname)
+        widgetUrlStr += '&divname=' + urllib_parse.quote(self.divname)
         widgetUrlStr += '&vertical=' + str(self.vertical).lower()
         widgetUrlStr += '&embedded=' + str(self.embedded).lower()
 
@@ -263,11 +262,11 @@ class DateRangeSettings(object):
         result = ''
         if self.dateRangeType == 'selection':
             result += '&dateRangeType=c'
-            result += '&dateRangeStart=' + quote(self.dateRangeStart)
-            result += '&dateRangeEnd=' + quote(self.dateRangeEnd)
+            result += '&dateRangeStart=' + urllib_parse.quote(self.dateRangeStart)
+            result += '&dateRangeEnd=' + urllib_parse.quote(self.dateRangeEnd)
         else:
-            result += '&dateRangeType=' + quote(self.dateRangeType)
-        result += '&dateCriteria=' + quote(self.dateCriteria)
+            result += '&dateRangeType=' + urllib_parse.quote(self.dateRangeType)
+        result += '&dateCriteria=' + urllib_parse.quote(self.dateCriteria)
         return result
 
 
@@ -292,7 +291,7 @@ class TagSettings(object):
         for k in self.tags.keys():
             if self.tags[k]:
                 result.extend(('&', k))
-                result.extend(('Tags=', quote(self.get_tag_str(k))))
+                result.extend(('Tags=', urllib_parse.quote(self.get_tag_str(k))))
                 result.extend(('&view', k.capitalize()))
-                result.extend(('TagGroups=', quote(self.get_view_tag_str(k))))
+                result.extend(('TagGroups=', urllib_parse.quote(self.get_view_tag_str(k))))
         return ''.join(result)
