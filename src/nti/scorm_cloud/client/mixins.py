@@ -23,6 +23,7 @@ def nodecapture(f):
     def wrapper(*args):
         node = args[-1]
         result = f(*args)
+        # pylint: disable=protected-access
         result._v_node = node
         return result
     return wrapper
