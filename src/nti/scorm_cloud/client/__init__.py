@@ -147,7 +147,7 @@ class ReportingService(object):
         return self.service.config.serviceurl.replace('EngineWebServices', '')
 
     def _get_base_reportage_url(self):
-        return (  self._get_reportage_service_url() 
+        return (self._get_reportage_service_url()
                 + 'Reportage/reportage.php'
                 + '?appId=' + self.service.config.appid)
 
@@ -293,5 +293,6 @@ class TagSettings(object):
                 result.extend(('&', k))
                 result.extend(('Tags=', urllib_parse.quote(self.get_tag_str(k))))
                 result.extend(('&view', k.capitalize()))
-                result.extend(('TagGroups=', urllib_parse.quote(self.get_view_tag_str(k))))
+                result.extend(('TagGroups=',
+                               urllib_parse.quote(self.get_view_tag_str(k))))
         return ''.join(result)

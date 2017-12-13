@@ -25,14 +25,14 @@ class DebugService(object):
         try:
             self.service.make_call('rustici.debug.ping')
             return True
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             return False
 
     def authPing(self):
         try:
             self.service.make_call('rustici.debug.authPing')
             return True
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             return False
     authping = authPing
 
@@ -40,6 +40,6 @@ class DebugService(object):
         try:
             xmldoc = self.service.make_call('rustici.debug.getTime')
             return xmldoc.documentElement.firstChild.firstChild.nodeValue
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             return None
     gettime = getTime

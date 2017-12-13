@@ -5,8 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-# disable: accessing protected members, too many methods
-# pylint: disable=W0212,R0904
+# pylint: disable=protected-access,too-many-public-methods
 
 from hamcrest import is_
 from hamcrest import assert_that
@@ -16,7 +15,7 @@ from nti.testing.matchers import validly_provides
 from nti.testing.matchers import verifiably_provides
 
 import unittest
-from six.moves.urllib_parse import parse_qs
+from six.moves import urllib_parse
 
 from nti.scorm_cloud.client import TagSettings
 from nti.scorm_cloud.client import WidgetSettings
@@ -57,7 +56,7 @@ class TestSettings(unittest.TestCase):
                     is_('Bankai|_all'))
         assert_that(s.get_view_tag_str('learner'),
                     is_('Ichigo,Rukia'))
-        assert_that(parse_qs(s.get_url_encoding()),
+        assert_that(urllib_parse.parse_qs(s.get_url_encoding()),
                     has_entries('viewLearnerTagGroups', ['Ichigo,Rukia'],
                                 'registrationTags', ['SoulSociety|_all'],
                                 'viewCourseTagGroups', ['Bankai'],
@@ -74,7 +73,7 @@ class TestSettings(unittest.TestCase):
         s.courseId = 'Bankai'
         s.learnerId = 'Ichigo'
 
-        assert_that(parse_qs(s.get_url_encoding()),
+        assert_that(urllib_parse.parse_qs(s.get_url_encoding()),
                     has_entries('scriptBased', ['true'],
                                 'embedded', ['true'],
                                 'vertical', ['false'],
@@ -89,7 +88,7 @@ class TestSettings(unittest.TestCase):
         s.tagSettings = TagSettings()
         s.tagSettings.add('course', 'Bankai')
 
-        assert_that(parse_qs(s.get_url_encoding()),
+        assert_that(urllib_parse.parse_qs(s.get_url_encoding()),
                     has_entries('scriptBased', ['true'],
                                 'embedded', ['true'],
                                 'vertical', ['false'],
