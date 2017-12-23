@@ -262,7 +262,7 @@ class IRegistrationService(interface.Interface):
     def updateLearnerInfo(learnerid, fname, lname, newid=None, email=None):
         """
         Update the learner information that was given during previous createRegistration calls.
-        
+
         :param learnerid: The id of the learner whose info is being updated
         :param fname: the first name of the learner
         :param lname: the last name of the learner
@@ -275,11 +275,11 @@ class IRegistrationService(interface.Interface):
         :type newid: str
         :type email: str
         """
-    
+
     def getPostbackInfo(regid):
         """
         Provides a way to retrieve the postback attributes
-        
+
         :param regid: the unique identifier for the registration
         :type regid: str
         """
@@ -287,7 +287,7 @@ class IRegistrationService(interface.Interface):
     def updatePostbackInfo(regid, url, name=None, password=None, authtype=None, resultsformat=None):
         """
         Provides a way to update the postback settings for a registration
-        
+
         :param regid: the unique identifier for the registration
         :param url: URL for registration results to be posted to
         :param name: auth name for the postback.
@@ -302,11 +302,11 @@ class IRegistrationService(interface.Interface):
         :type authtype: str
         :type resultsformat: str
         """
- 
+
     def deletePostbackInfo(regid):
         """
         Clear postback settings so that registration results no longer invoke a postback url.
-        
+
         :param regid: the unique identifier for the registration
         :type regid: str
         """
@@ -561,6 +561,7 @@ class ICourseService(interface.Interface):
         :param attributePairs: the attribute name/value pairs to update
         """
 
+
 class IDateRangeSettings(interface.Interface):
 
     def get_url_encoding():
@@ -700,13 +701,13 @@ class IReportingService(interface.Interface):
 
 
 class IUnmarshalled(interface.Interface):
-    
+
     _node = interface.Attribute('Minidom node object')
-    
+
     def fromMinidom(node):
         """
         Construct an instance of this object using the minidom source node
-        
+
         :param node: Minodom node
         :return: A new instance of the implementer object
         """
