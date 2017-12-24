@@ -102,5 +102,5 @@ def get_source(context):
     if hasattr(context, 'read'):
         return context
     elif isinstance(context, six.string_types):
-        return open(context, "rb")
+        return open(context, "r")
     raise ValueError("Invalid context source")
