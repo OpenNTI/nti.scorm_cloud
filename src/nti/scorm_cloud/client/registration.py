@@ -12,15 +12,15 @@ import uuid
 
 from zope import interface
 
-from nti.scorm_cloud.client.request import ScormCloudError
-
-from nti.scorm_cloud.interfaces import IRegistrationService
-
 from nti.scorm_cloud.client.mixins import WithRepr
 from nti.scorm_cloud.client.mixins import NodeMixin
 from nti.scorm_cloud.client.mixins import RegistrationMixin
 
 from nti.scorm_cloud.client.mixins import nodecapture
+
+from nti.scorm_cloud.client.request import ScormCloudError
+
+from nti.scorm_cloud.interfaces import IRegistrationService
 
 from nti.scorm_cloud.minidom import getChildren
 from nti.scorm_cloud.minidom import getChildText
