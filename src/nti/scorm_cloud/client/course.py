@@ -204,6 +204,20 @@ class CourseData(object):
         return allResults
 
 
+class Metadata(object):
+    """
+    An object containing the information returned by `get_metadata`.
+
+    #TODO: Implement remaining properties as needed
+    """
+
+    title = u''
+
+    def __init__(self, xmldoc):
+        obj_element = xmldoc.documentElement.getElementsByTagName('object')[0]
+        self.title = obj_element.getAttribute('title')
+
+
 class UploadToken(object):
     server = ""
     tokenid = ""
