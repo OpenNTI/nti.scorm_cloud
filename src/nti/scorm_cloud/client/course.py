@@ -103,7 +103,8 @@ class CourseService(object):
     def get_metadata(self, courseid):
         request = self.service.request()
         request.parameters['courseid'] = courseid
-        return request.call_service('rustici.course.getMetadata')
+        xml_response = request.call_service('rustici.course.getMetadata')
+        return Metadata(xml_response)
 
     def get_property_editor_url(self, courseid, stylesheetUrl=None,
                                 notificationFrameUrl=None):
