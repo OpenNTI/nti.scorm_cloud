@@ -152,7 +152,7 @@ class ServiceRequest(object):
             reply = session.post(url, postparams,
                                  files={u'file': self.file_}).text
         elif not postparams:
-            reply = session.get(url).text
+            reply = session.get(url).content
         else:
             reply = session.post(url, postparams).text
         return reply
