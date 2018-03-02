@@ -132,7 +132,6 @@ class CourseService(object):
         request.parameters['courseid'] = courseid
         request.file_ = get_source(path)
         result = request.call_service('rustici.course.updateAssets')
-        from IPython.terminal.debugger import set_trace;set_trace()
         return result
 
     def update_attributes(self, courseid, attributePairs):
