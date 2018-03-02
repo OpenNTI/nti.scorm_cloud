@@ -553,6 +553,18 @@ class ICourseService(interface.Interface):
         :param versionid: the specific version of the course
         """
 
+    def update_assets(courseid, path):
+        """
+        This method can be used to update the assets of the course specified.
+        Files found in the zip file, which is sent through the request or
+        specified by the optional path parameter, will be overlayed on top of
+        the files belonging to the course specifed by courseid.
+        Note however that the existing manifest file will not be overwritten.
+
+        :param courseid: The ID used to identify the course to update.
+        :param path: The file or path to the file used for the update.
+        """
+
     def update_attributes(courseid, attributePairs):
         """
         Updates the specified attributes for the course.
