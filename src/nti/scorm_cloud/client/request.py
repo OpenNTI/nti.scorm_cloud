@@ -12,6 +12,7 @@ import re
 import datetime
 from hashlib import md5
 from xml.dom import minidom
+from xml.parsers.expat import ExpatError
 
 from six import text_type
 from six.moves import urllib_parse
@@ -81,7 +82,11 @@ class ServiceRequest(object):
 
         url = self.construct_url(method, serviceurl)
         rawresponse = self.send_post(url, postparams)
-        response = self.get_xml(rawresponse)
+        try:
+            response = self.get_xml(rawresponse)
+        except (UnicodeEncodeError, ExpatError) as _:
+            logger.info(u'rawresponse could not be decoded into XML')
+            response = rawresponse
         return response
 
     def construct_url(self, method, serviceurl=None):
@@ -147,7 +152,7 @@ class ServiceRequest(object):
             reply = session.post(url, postparams,
                                  files={u'file': self.file_}).text
         elif not postparams:
-            reply = session.get(url).text
+            reply = session.get(url).content
         else:
             reply = session.post(url, postparams).text
         return reply
