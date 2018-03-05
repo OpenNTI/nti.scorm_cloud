@@ -127,6 +127,13 @@ class CourseService(object):
             atts[an.attributes['name'].value] = an.attributes['value'].value
         return atts
 
+    def update_assets(self, courseid, path):
+        request = self.service.request()
+        request.parameters['courseid'] = courseid
+        request.file_ = get_source(path)
+        result = request.call_service('rustici.course.updateAssets')
+        return result
+
     def update_attributes(self, courseid, attributePairs):
         request = self.service.request()
         request.parameters['courseid'] = courseid
