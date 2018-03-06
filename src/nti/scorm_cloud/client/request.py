@@ -130,8 +130,8 @@ class ServiceRequest(object):
             err = rsp.firstChild
             msg = getAttributeValue(err, 'msg')
             code = getAttributeValue(err, 'code')
-            raise ScormCloudError('SCORM Cloud Error: %s - %s' % (code, msg),
-                                  msg, code)
+            raise ScormCloudError(msg='SCORM Cloud Error: %s - %s' % (code, msg),
+                                  code=code, json=msg)
         return xmldoc
 
     def session(self):
