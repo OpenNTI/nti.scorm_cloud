@@ -19,6 +19,8 @@ from six.moves import urllib_parse
 
 from requests import Session
 
+from requests.exceptions import RequestException
+
 from nti.scorm_cloud.compat import bytes_
 from nti.scorm_cloud.compat import native_
 
@@ -50,6 +52,10 @@ class ScormCloudError(Exception):
         Exception.__init__(self, msg)
         self.code = code
         self.json = json
+
+
+class ScormUpdateError(ScormCloudError):
+    pass
 
 
 class ServiceRequest(object):
@@ -147,14 +153,23 @@ class ServiceRequest(object):
         :type url: str
         :type postparams: str
         """
+
         session = self.session()
         if self.file_ is not None:
-            reply = session.post(url, postparams,
-                                 files={u'file': self.file_}).text
+            response = session.post(url, postparams,
+                                 files={u'file': self.file_})
+            reply = response.text
         elif not postparams:
-            reply = session.get(url).content
+            response = session.get(url)
+            reply = response.content
         else:
-            reply = session.post(url, postparams).text
+            response = session.post(url, postparams)
+            reply = response.text
+        try:
+            response.raise_for_status()
+        except RequestException as exc:
+            logger.warn('HTTP error while posting to scorm cloud (%s)', exc)
+            raise ScormUpdateError(exc.message)
         return reply
 
     def encode_and_sign(self, dictionary):

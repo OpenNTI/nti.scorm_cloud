@@ -10,6 +10,11 @@ from __future__ import absolute_import
 
 from zope import interface
 
+from nti.common.string import is_true
+
+from nti.scorm_cloud.client.request import ScormCloudError
+from nti.scorm_cloud.client.request import ScormUpdateError
+
 from nti.scorm_cloud.client.mixins import get_source
 
 from nti.scorm_cloud.interfaces import ICourseService
@@ -62,11 +67,24 @@ class CourseService(object):
     def __init__(self, service):
         self.service = service
 
+    def _validate_import(self, xmldoc):
+        results = xmldoc.getElementsByTagName('importresult')
+        if results:
+            result = results[0]
+            success = result.attributes['successful'].value
+            if not is_true(success):
+                msg = ''
+                for child_node in result.childNodes or ():
+                    if child_node.tagName == 'message':
+                        msg = child_node.firstChild.wholeText
+                raise ScormUpdateError(msg)
+
     def import_uploaded_course(self, courseid, path):
         request = self.service.request()
         request.parameters['courseid'] = courseid
         request.file_ = get_source(path)
         result = request.call_service('rustici.course.importCourse')
+        self._validate_import(result)
         result = ImportResult.list_from_result(result)
         return result
 
@@ -133,6 +151,7 @@ class CourseService(object):
         request.parameters['courseid'] = courseid
         request.file_ = get_source(path)
         result = request.call_service('rustici.course.updateAssets')
+        self._validate_import(result)
         return result
 
     def update_attributes(self, courseid, attributePairs):
