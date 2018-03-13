@@ -42,14 +42,14 @@ class TestRegistrationService(unittest.TestCase):
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
-        regid = reg.createRegistration("bankai", None,
-                                       'Ichigo', 'Kurosaki',
-                                       'ichigo@bleach.org',
-                                       'ichigo@bleach.org',
-                                       "http://bleach.org",
-                                       "httpbasic", "ichigo", "zangetsu",
-                                       "course")
-        assert_that(regid, is_(not_none()))
+        result = reg.createRegistration("bankai", None,
+                                        'Ichigo', 'Kurosaki',
+                                        'ichigo@bleach.org',
+                                        'ichigo@bleach.org',
+                                        "http://bleach.org",
+                                        "httpbasic", "ichigo", "zangetsu",
+                                        "course")
+        assert_that(result, is_(not_none()))
 
         reply = '<rsp stat="ok"><failed/></rsp>'
         data = fake_response(content=reply)
@@ -76,8 +76,8 @@ class TestRegistrationService(unittest.TestCase):
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
-        regid = reg.exists("bankai")
-        assert_that(regid, is_(False))
+        exists = reg.exists("bankai")
+        assert_that(exists, is_(False))
 
     @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
     def test_delete_registration(self, mock_ss):
