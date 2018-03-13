@@ -22,6 +22,7 @@ from nti.scorm_cloud.client.request import ScormCloudError
 
 from nti.scorm_cloud.client.scorm import ScormCloudService
 
+from nti.scorm_cloud.tests import fake_response
 from nti.scorm_cloud.tests import SharedConfiguringTestLayer
 
 
@@ -36,7 +37,7 @@ class TestInvitationService(unittest.TestCase):
         invitation = service.get_invitation_service()
 
         reply = '<rsp stat="ok">937296cb-ae79-4190-bb6f-9a39b97785ac</rsp>'
-        data = fudge.Fake().has_attr(content=reply)
+        data = fake_response(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -58,7 +59,7 @@ class TestInvitationService(unittest.TestCase):
         invitation = service.get_invitation_service()
 
         reply = '<rsp stat="ok"><status>complete</status></rsp>'
-        data = fudge.Fake().has_attr(content=reply)
+        data = fake_response(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -112,7 +113,7 @@ class TestInvitationService(unittest.TestCase):
         </invitationInfo>
         """
         reply = '<rsp stat="ok">%s</rsp>' % reply
-        data = fudge.Fake().has_attr(content=reply)
+        data = fake_response(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -162,7 +163,7 @@ class TestInvitationService(unittest.TestCase):
         </invitationlist>
         """
         reply = '<rsp stat="ok">%s</rsp>' % reply
-        data = fudge.Fake().has_attr(content=reply)
+        data = fake_response(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -176,7 +177,7 @@ class TestInvitationService(unittest.TestCase):
         service = service.get_invitation_service()
 
         reply = '<rsp stat="ok"><success/></rsp>'
-        data = fudge.Fake().has_attr(content=reply)
+        data = fake_response(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -184,7 +185,7 @@ class TestInvitationService(unittest.TestCase):
                              True, True, '20171130152345')
         
         reply = '<rsp stat="ok"><failed/></rsp>'
-        data = fudge.Fake().has_attr(content=reply)
+        data = fake_response(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
