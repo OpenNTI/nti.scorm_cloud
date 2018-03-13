@@ -36,7 +36,7 @@ class TestInvitationService(unittest.TestCase):
         invitation = service.get_invitation_service()
 
         reply = '<rsp stat="ok">937296cb-ae79-4190-bb6f-9a39b97785ac</rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -58,7 +58,7 @@ class TestInvitationService(unittest.TestCase):
         invitation = service.get_invitation_service()
 
         reply = '<rsp stat="ok"><status>complete</status></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -112,7 +112,7 @@ class TestInvitationService(unittest.TestCase):
         </invitationInfo>
         """
         reply = '<rsp stat="ok">%s</rsp>' % reply
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -162,7 +162,7 @@ class TestInvitationService(unittest.TestCase):
         </invitationlist>
         """
         reply = '<rsp stat="ok">%s</rsp>' % reply
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -176,7 +176,7 @@ class TestInvitationService(unittest.TestCase):
         service = service.get_invitation_service()
 
         reply = '<rsp stat="ok"><success/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -184,7 +184,7 @@ class TestInvitationService(unittest.TestCase):
                              True, True, '20171130152345')
         
         reply = '<rsp stat="ok"><failed/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 

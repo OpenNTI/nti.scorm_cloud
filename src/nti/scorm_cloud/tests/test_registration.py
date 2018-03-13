@@ -51,7 +51,7 @@ class TestRegistrationService(unittest.TestCase):
         assert_that(regid, is_(not_none()))
 
         reply = '<rsp stat="ok"><failed/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -71,7 +71,7 @@ class TestRegistrationService(unittest.TestCase):
         reg = service.get_registration_service()
 
         reply = '<rsp stat="ok"><result>false</result></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -85,14 +85,14 @@ class TestRegistrationService(unittest.TestCase):
         reg = service.get_registration_service()
 
         reply = '<rsp stat="ok"><success/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
         reg.deleteRegistration("bankai")
 
         reply = '<rsp stat="ok"><failed/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
         with self.assertRaises(ScormCloudError):
@@ -105,14 +105,14 @@ class TestRegistrationService(unittest.TestCase):
         reg = service.get_registration_service()
 
         reply = '<rsp stat="ok"><success/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
         reg.resetRegistration("bankai")
 
         reply = '<rsp stat="ok"><failed/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
         with self.assertRaises(ScormCloudError):
@@ -148,7 +148,7 @@ class TestRegistrationService(unittest.TestCase):
         </launchhistory>
         """
         reply = '<rsp stat="ok">%s</rsp>' % reply
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -195,7 +195,7 @@ class TestRegistrationService(unittest.TestCase):
         </registrationlist>
         """
         reply = '<rsp stat="ok">%s</rsp>' % reply
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -251,7 +251,7 @@ class TestRegistrationService(unittest.TestCase):
         </registration>
         """
         reply = '<rsp stat="ok">%s</rsp>' % reply
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -276,7 +276,7 @@ class TestRegistrationService(unittest.TestCase):
         </registrationreport>
         """
         reply = '<rsp stat="ok">%s</rsp>' % reply
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -307,7 +307,7 @@ class TestRegistrationService(unittest.TestCase):
         </registrationreport>
         """
         reply = '<rsp stat="ok">%s</rsp>' % reply
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -411,7 +411,7 @@ class TestRegistrationService(unittest.TestCase):
         </registrationreport>
         """
         reply = '<rsp stat="ok">%s</rsp>' % reply
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -478,7 +478,7 @@ class TestRegistrationService(unittest.TestCase):
         </launch>
         """
         reply = '<rsp stat="ok">%s</rsp>' % reply
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
         result = reg.getLaunchInfo("d6f31a43")
@@ -495,14 +495,14 @@ class TestRegistrationService(unittest.TestCase):
         reg = service.get_registration_service()
 
         reply = '<rsp stat="ok"><success/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
         reg.resetGlobalObjectives("bankai")
 
         reply = '<rsp stat="ok"><failed/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
         with self.assertRaises(ScormCloudError):
@@ -515,7 +515,7 @@ class TestRegistrationService(unittest.TestCase):
         reg = service.get_registration_service()
 
         reply = '<rsp stat="ok"><success/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -523,7 +523,7 @@ class TestRegistrationService(unittest.TestCase):
                               "ichigo", "ichigo@bleach.org")
 
         reply = '<rsp stat="ok"><failed/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
         with self.assertRaises(ScormCloudError):
@@ -543,7 +543,7 @@ class TestRegistrationService(unittest.TestCase):
         </postbackinfo>
         """
         reply = '<rsp stat="ok">%s</rsp>' % reply
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
         result = reg.getPostbackInfo("reg001")
@@ -561,7 +561,7 @@ class TestRegistrationService(unittest.TestCase):
         reg = service.get_registration_service()
 
         reply = '<rsp stat="ok"><success/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
@@ -569,7 +569,7 @@ class TestRegistrationService(unittest.TestCase):
                                "form", "course")
 
         reply = '<rsp stat="ok"><failed/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
         with self.assertRaises(ScormCloudError):
@@ -582,14 +582,14 @@ class TestRegistrationService(unittest.TestCase):
         reg = service.get_registration_service()
 
         reply = '<rsp stat="ok"><success/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
 
         reg.deletePostbackInfo("myregid")
 
         reply = '<rsp stat="ok"><failed/></rsp>'
-        data = fudge.Fake().has_attr(text=reply)
+        data = fudge.Fake().has_attr(content=reply)
         session = fudge.Fake().expects('get').returns(data)
         mock_ss.is_callable().returns(session)
         with self.assertRaises(ScormCloudError):
