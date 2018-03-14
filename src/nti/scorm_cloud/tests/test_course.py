@@ -8,6 +8,7 @@ from __future__ import absolute_import
 # pylint: disable=protected-access,too-many-public-methods
 
 from hamcrest import is_
+from hamcrest import not_none
 from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import has_properties
@@ -58,3 +59,19 @@ class TestCourseService(unittest.TestCase):
                                    'message', 'Import Successful',
                                    'parserWarnings', ['[warning text]'],
                                    'wasSuccessful', True))
+    
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_delete_course(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        course = service.get_course_service()
+        
+        reply = '<success />'
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fake_response(content=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        
+        result = course.delete_course('courseid')
+        success_nodes = result.getElementsByTagName('success')
+        assert_that(success_nodes, is_(not_none()))
