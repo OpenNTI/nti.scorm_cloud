@@ -20,6 +20,7 @@ import zope.testing.cleanup
 
 def fake_response(content):
     return fudge.Fake().has_attr(content=content) \
+                       .has_attr(text=content) \
                        .provides('raise_for_status').calls(lambda: None)
 
 
