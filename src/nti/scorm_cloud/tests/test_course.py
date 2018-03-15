@@ -203,4 +203,21 @@ class TestCourseService(unittest.TestCase):
                                 'commMaxFailedSubmissions', '2',
                                 'validateInteractionResponses', 'true',
                                 'wrapScoWindowWithApi', 'false'))
+    
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_update_assets(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        course = service.get_course_service()
+        
+        path = BytesIO(b'data')
+        reply = '<success />'
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fake_response(content=reply)
+        session = fudge.Fake().expects('post').returns(data)
+        mock_ss.is_callable().returns(session)
+        
+        result = course.update_assets('courseid', path)
+        success_nodes = result.getElementsByTagName('success')
+        assert_that(success_nodes, is_(not_none()))
         
