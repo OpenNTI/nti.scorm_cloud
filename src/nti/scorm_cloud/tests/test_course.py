@@ -11,6 +11,7 @@ from hamcrest import is_
 from hamcrest import not_none
 from hamcrest import has_length
 from hamcrest import assert_that
+from hamcrest import has_entries
 from hamcrest import starts_with
 from hamcrest import has_properties
 
@@ -174,3 +175,32 @@ class TestCourseService(unittest.TestCase):
         course = service.get_course_service()
         url = course.get_property_editor_url('courseid')
         assert_that(url, starts_with("http://cloud.scorm.com/api?"))
+    
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_attributes(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        course = service.get_course_service()
+        
+        reply = """
+        <attributes>
+            <attribute name="alwaysFlowToFirstSco" value="false"/>
+            <attribute name="commCommitFrequency" value="10000"/>
+            <attribute name="commMaxFailedSubmissions" value="2"/>
+            <attribute name="validateInteractionResponses" value="true"/>
+            <attribute name="wrapScoWindowWithApi" value="false"/>
+         </attributes>
+        """
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fake_response(content=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        
+        attributes = course.get_attributes('courseid')
+        assert_that(attributes,
+                    has_entries('alwaysFlowToFirstSco', 'false',
+                                'commCommitFrequency', '10000',
+                                'commMaxFailedSubmissions', '2',
+                                'validateInteractionResponses', 'true',
+                                'wrapScoWindowWithApi', 'false'))
+        
