@@ -135,3 +135,36 @@ class TestCourseService(unittest.TestCase):
         url = course.get_preview_url('courseid', 'about:none')
         assert_that(url, starts_with("http://cloud.scorm.com/api?"))
         
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_metadata(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        course = service.get_course_service()
+        
+        reply = """
+        <package>
+            <metadata>
+                <title>Package Title</title>
+                <description>Package Description</description>
+                <duration>Package Duration</duration>
+                <typicaltime>0</typicaltime>
+                <keywords>
+                    <keyword>Training</keyword>
+                </keywords>
+            </metadata>
+            <object id="B0"
+                    title="Root Title"
+                    description="Root Description"
+                    duration="0"
+                    typicaltime="0" />
+        </package>
+        """
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fake_response(content=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        
+        metadata = course.get_metadata('courseid')
+        assert_that(metadata,
+                    has_properties('title', 'Root Title'))
+        
