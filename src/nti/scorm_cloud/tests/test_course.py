@@ -243,3 +243,4 @@ class TestCourseService(unittest.TestCase):
         assert_that(result,
                     has_entries('showCourseStructure', 'false',
                                 'showNavBar', 'true'))
+        
