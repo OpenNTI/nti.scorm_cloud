@@ -77,7 +77,7 @@ class TestCourseService(unittest.TestCase):
         assert_that(success_nodes, is_(not_none()))
     
     @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
-    def test_get_archive(self, mock_ss):
+    def test_get_assets(self, mock_ss):
         service = ScormCloudService.withargs("appid", "secret",
                                              "http://cloud.scorm.com/api")
         course = service.get_course_service()
