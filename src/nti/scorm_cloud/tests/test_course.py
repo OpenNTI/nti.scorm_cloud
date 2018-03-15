@@ -220,4 +220,26 @@ class TestCourseService(unittest.TestCase):
         result = course.update_assets('courseid', path)
         success_nodes = result.getElementsByTagName('success')
         assert_that(success_nodes, is_(not_none()))
+    
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_update_attributes(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        course = service.get_course_service()
         
+        reply = """
+        <attributes>
+            <attribute name="showCourseStructure" value="false"/>
+            <attribute name="showNavBar" value="true"/>
+        </attributes>
+         """
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fake_response(content=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        
+        result = course.update_attributes('courseid', {'showCourseStructure': False,
+                                                       'showNavBar': True})
+        assert_that(result,
+                    has_entries('showCourseStructure', 'false',
+                                'showNavBar', 'true'))
