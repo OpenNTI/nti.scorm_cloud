@@ -75,3 +75,17 @@ class TestCourseService(unittest.TestCase):
         result = course.delete_course('courseid')
         success_nodes = result.getElementsByTagName('success')
         assert_that(success_nodes, is_(not_none()))
+    
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_archive(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        course = service.get_course_service()
+        
+        reply = u'bytes\uFFFD'
+        data = fake_response(content=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        
+        result = course.get_assets('courseid')
+        assert_that(result, is_(reply))
