@@ -89,3 +89,41 @@ class TestCourseService(unittest.TestCase):
         
         result = course.get_assets('courseid')
         assert_that(result, is_(reply))
+    
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_course_list(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        course = service.get_course_service()
+        
+        reply = """
+        <courselist>
+            <course id="test321" title="Photoshop Example -- Competency" versions="-1" registrations="2" >
+                <tags>
+                    <tag>test1</tag>
+                    <tag>test2</tag>
+                </tags>
+            </course>
+            <course id="course321" title="Another Test Course" versions="-1" registrations="5" >
+                <tags></tags>
+            </course>
+        </courselist>
+        """
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fake_response(content=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        
+        course_list = course.get_course_list()
+        assert_that(course_list, has_length(2))
+        assert_that(course_list[0],
+                    has_properties('title', 'Photoshop Example -- Competency',
+                                   'courseId', 'test321',
+                                   'numberOfVersions', '-1',
+                                   'numberOfRegistrations', '2'))
+        assert_that(course_list[1],
+                    has_properties('title', 'Another Test Course',
+                                   'courseId', 'course321',
+                                   'numberOfVersions', '-1',
+                                   'numberOfRegistrations', '5'))
+        
