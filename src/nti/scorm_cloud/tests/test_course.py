@@ -168,3 +168,9 @@ class TestCourseService(unittest.TestCase):
         assert_that(metadata,
                     has_properties('title', 'Root Title'))
         
+    def test_get_property_editor_url(self):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        course = service.get_course_service()
+        url = course.get_property_editor_url('courseid')
+        assert_that(url, starts_with("http://cloud.scorm.com/api?"))
