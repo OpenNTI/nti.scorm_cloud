@@ -11,6 +11,7 @@ from hamcrest import is_
 from hamcrest import not_none
 from hamcrest import has_length
 from hamcrest import assert_that
+from hamcrest import starts_with
 from hamcrest import has_properties
 
 import unittest
@@ -126,4 +127,11 @@ class TestCourseService(unittest.TestCase):
                                    'courseId', 'course321',
                                    'numberOfVersions', '-1',
                                    'numberOfRegistrations', '5'))
+        
+    def test_get_preview_url(self):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        course = service.get_course_service()
+        url = course.get_preview_url('courseid', 'about:none')
+        assert_that(url, starts_with("http://cloud.scorm.com/api?"))
         
