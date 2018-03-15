@@ -230,7 +230,7 @@ class RegistrationService(object):
         if not successNodes:
             raise ScormCloudError("Update Postback info failed.")
         return regid
-    update_postback_info = getPostbackInfo
+    update_postback_info = updatePostbackInfo
 
     def deletePostbackInfo(self, regid):
         request = self.service.request()
