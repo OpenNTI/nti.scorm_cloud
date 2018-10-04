@@ -12,7 +12,8 @@ from __future__ import absolute_import
 
 from zope import interface
 
-from zope.schema import Bool
+from zope.configuration.fields import Bool
+
 from zope.schema import Object
 from zope.schema import TextLine
 
@@ -94,8 +95,8 @@ class IDebugService(interface.Interface):
 
     def gettime():
         """
-        Returns the time on the running instance, in (UTC/GMT) timezone in the 
-        form ‘yyyyMMddHHmmss’. This format is used for the timestamp that is part of 
+        Returns the time on the running instance, in (UTC/GMT) timezone in the
+        form ‘yyyyMMddHHmmss’. This format is used for the timestamp that is part of
         the security mechanism.
         """
 
@@ -126,7 +127,7 @@ class IRegistrationService(interface.Interface):
         :param authtype: specify how to authorize against the given postbackurl, can be “form” or “httpbasic”
         :param urlname: an optional login name to be used for credentials when posting to the URL specified in postbackurl
         :param urlpass: credentials for the postbackurl
-        :param resultsformat: level of detail in the information that is posted back while the course is being taken. 
+        :param resultsformat: level of detail in the information that is posted back while the course is being taken.
             It may be one of three values: “course” (course summary), “activity” (activity summary), or “full” (full detail)
         :type courseid: str
         :type regid: str
@@ -186,9 +187,9 @@ class IRegistrationService(interface.Interface):
 
     def getRegistrationDetail(regid):
         """
-        Return detail for a registration 
+        Return detail for a registration
 
-        :param regid: the registration id 
+        :param regid: the registration id
         :type regid: str
         """
 
@@ -199,7 +200,7 @@ class IRegistrationService(interface.Interface):
         :param regid: the unique identifier for the registration
         :param resultsformat: (optional) can be "course", "activity", or "full" to
             determine the level of detail returned. The default is "course"
-        :param instanceid: the ID of a particular registration instance 
+        :param instanceid: the ID of a particular registration instance
         :type regid: str
         :type resultsformat: str
         :type instanceid: str
@@ -220,7 +221,7 @@ class IRegistrationService(interface.Interface):
             learner launching the course
         :param registrationTags: comma-delimited list of tags to associate with the
             launched registration
-        :param disableTracking: if set to True the registration will be launched with tracking disabled, 
+        :param disableTracking: if set to True the registration will be launched with tracking disabled,
             and the launch will not result in any changes to the registration
         :param culture: culture code
         :type regid: str
@@ -291,9 +292,9 @@ class IRegistrationService(interface.Interface):
         :param regid: the unique identifier for the registration
         :param url: URL for registration results to be posted to
         :param name: auth name for the postback.
-        :param password: credentials for the postbackurl 
+        :param password: credentials for the postbackurl
         :param authtype: type of authentication used
-        :param resultsformat: level of detail in the information that is posted back 
+        :param resultsformat: level of detail in the information that is posted back
             while the course is being taken
         :type regid: str
         :type url: str
@@ -340,7 +341,7 @@ class IInvitationService(interface.Interface):
         :param authtype: specify how to authorize against the given postbackurl, can be “form” or “httpbasic”
         :param urlname: an optional login name to be used for credentials when posting to the URL specified in postbackurl
         :param urlpass: credentials for the postbackurl
-        :param resultsformat: level of detail in the information that is posted back while the course is being taken. 
+        :param resultsformat: level of detail in the information that is posted back while the course is being taken.
             It may be one of three values: “course” (course summary), “activity” (activity summary), or “full” (full detail)
         :param expirationdate: the date this invitation will expire (formatted yyyyMMddHHmmss in UTC time)
         :type courseid: str
@@ -364,7 +365,7 @@ class IInvitationService(interface.Interface):
                               urlpass=None, resultsformat=None, expirationdate=None):
         """
         Creates a new invitation in your SCORM Cloud account, customized with the given parameters,
-        and will return the id for the newly created invitation. The method will still return the invitation Id, 
+        and will return the id for the newly created invitation. The method will still return the invitation Id,
         but the job of creating the registrations and sending the invitation email may not yet be complete.
 
         :param courseid: the course to which this invitation is being created
@@ -379,7 +380,7 @@ class IInvitationService(interface.Interface):
         :param authtype: specify how to authorize against the given postbackurl, can be “form” or “httpbasic”
         :param urlname: an optional login name to be used for credentials when posting to the URL specified in postbackurl
         :param urlpass: credentials for the postbackurl
-        :param resultsformat: level of detail in the information that is posted back while the course is being taken. 
+        :param resultsformat: level of detail in the information that is posted back while the course is being taken.
             It may be one of three values: “course” (course summary), “activity” (activity summary), or “full” (full detail)
         :param expirationdate: the date this invitation will expire (formatted yyyyMMddHHmmss in UTC time)
         :type courseid: str
@@ -409,7 +410,7 @@ class IInvitationService(interface.Interface):
         Retrieves the information associated with an invitation
 
         :param invitationId: the invitation identifier
-        :param detail: whether to return registration summary info 
+        :param detail: whether to return registration summary info
         :type invitationId: str
         :type detail: bool
         """
@@ -419,8 +420,8 @@ class IInvitationService(interface.Interface):
         Retrieves a list of invitations
 
         :param filter_: a regular expression that will be used to filter the list of invitations
-        :param coursefilter: A regular express that will be used to filter the list of invitations. 
-            Specifically only those invitations that are associated with courses whose courseid’s match 
+        :param coursefilter: A regular express that will be used to filter the list of invitations.
+            Specifically only those invitations that are associated with courses whose courseid’s match
             the given expression will be returned in the list
         :type filter_: str
         :type coursefilter: str
@@ -538,8 +539,8 @@ class ICourseService(interface.Interface):
         :param courseid: the unique identifier for the course
         :param stylesheeturl -- URL to a custom editor stylesheet
         :param notificationFrameUrl -- Tells the property editor to render a sub-iframe
-            with this URL as the source. This can be used to simulate an 
-            "onload" by using a notificationFrameUrl that is on the same domain 
+            with this URL as the source. This can be used to simulate an
+            "onload" by using a notificationFrameUrl that is on the same domain
             as the host system and calling parent.parent.method()
         :type stylesheeturl: str
         :type notificationFrameUrl: str
@@ -547,7 +548,7 @@ class ICourseService(interface.Interface):
 
     def get_attributes(courseid):
         """
-        Retrieves the list of associated attributes for the course. 
+        Retrieves the list of associated attributes for the course.
 
         :param courseid: the unique identifier for the course
         :param versionid: the specific version of the course
@@ -641,7 +642,7 @@ class IWidgetSettings(interface.Interface):
 
     def get_url_encoding():
         """
-        Returns the widget settings as encoded URL parameters to add to a 
+        Returns the widget settings as encoded URL parameters to add to a
         Reportage widget URL.
         """
 
