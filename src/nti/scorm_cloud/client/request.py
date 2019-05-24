@@ -21,6 +21,8 @@ from requests import Session
 
 from requests.exceptions import RequestException
 
+from nti.common.iterables import is_nonstr_iterable
+
 from nti.scorm_cloud.compat import bytes_
 from nti.scorm_cloud.compat import native_
 
@@ -40,6 +42,8 @@ def make_utf8(dictionary):
     for key, value in dictionary.items():
         if isinstance(value, text_type):
             value = native_(value, 'utf-8')
+        elif is_nonstr_iterable(value):
+            value = ','.join(value)
         else:
             value = str(value)
         result[key] = value

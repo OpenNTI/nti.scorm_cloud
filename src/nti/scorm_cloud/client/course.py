@@ -12,7 +12,6 @@ from zope import interface
 
 from nti.common.string import is_true
 
-from nti.scorm_cloud.client.request import ScormCloudError
 from nti.scorm_cloud.client.request import ScormUpdateError
 
 from nti.scorm_cloud.client.mixins import get_source
@@ -100,10 +99,16 @@ class CourseService(object):
             request.parameters['path'] = path
         return request.call_service('rustici.course.getAssets')
 
-    def get_course_list(self, courseIdFilterRegex=None):
+    def get_course_list(self, courseIdFilterRegex=None, tags=None):
+        """
+        Fetch the scorm content, filtering by the scorm courseId or
+        by the given tags (must match all).
+        """
         request = self.service.request()
         if courseIdFilterRegex:
             request.parameters['filter'] = courseIdFilterRegex
+        if tags:
+            request.parameters['tags'] = tags
         result = request.call_service('rustici.course.getCourseList')
         courses = CourseData.list_from_result(result)
         return courses

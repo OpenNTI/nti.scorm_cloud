@@ -26,8 +26,8 @@ setup(
     author_email='jason@nextthought.com',
     description="NTI Scorm Cloud",
     long_description=(
-        _read('README.rst') 
-        + '\n\n' 
+        _read('README.rst')
+        + '\n\n'
         + _read("CHANGES.rst")
     ),
     license='Apache',
@@ -52,6 +52,7 @@ setup(
     namespace_packages=['nti'],
     tests_require=TESTS_REQUIRE,
     install_requires=[
+        'nti.common',
         'setuptools',
         'six',
         'requests',
