@@ -46,19 +46,22 @@ class TestRequest(unittest.TestCase):
             'Bleach': u'Ichigo',
             'Shikai': u'黒衣の男',
             'Bankai': object(),
+            'tag_list': ["aaaa", "bbbb", "cccc"]
         }
         assert_that(make_utf8(data),
                     has_entries('Bleach', 'Ichigo',
+                                'tag_list', "aaaa,bbbb,cccc",
                                 'Shikai', is_(instance_of(six.string_types)),
                                 'Bankai', is_(instance_of(six.string_types))))
-        
+
+
     def test_coverage(self):
         service = ServiceRequest(None)
-        
+
         # get xml with error
         raw = '<rsp stat="failed"><error code="500" msg="server error"/></rsp>'
         with self.assertRaises(ScormCloudError):
             service.get_xml(raw)
-        
+
         # get a requests session
         assert_that(service.session(), is_(Session))
