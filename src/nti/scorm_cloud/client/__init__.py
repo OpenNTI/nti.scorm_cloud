@@ -35,6 +35,8 @@ from nti.scorm_cloud.client.request import ServiceRequest
 from nti.scorm_cloud.client.request import ScormCloudError
 from nti.scorm_cloud.client.request import ScormCloudUtilities
 
+from nti.scorm_cloud.client.tag import TagService
+
 from nti.scorm_cloud.interfaces import ITagSettings
 from nti.scorm_cloud.interfaces import IDebugService
 from nti.scorm_cloud.interfaces import IWidgetSettings
@@ -82,6 +84,9 @@ class ScormCloudService(object):
             API/Python client library
         """
         return cls(Configuration(appid, secret, serviceurl, origin))
+
+    def get_tag_service(self):
+        return TagService(self)
 
     def get_course_service(self):
         return CourseService(self)
