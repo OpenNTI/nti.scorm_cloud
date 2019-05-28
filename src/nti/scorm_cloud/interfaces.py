@@ -32,6 +32,14 @@ class IScormCloudService(interface.Interface):
         :rtype: :class:`.ICourseService`
         """
 
+    def get_tag_service():
+        """
+        Retrieves the TagService.
+
+        :return: return a new tag service object
+        :rtype: :class:`.ITagService`
+        """
+
     def get_debug_service():
         """
         Retrieves the DebugService.
@@ -98,6 +106,51 @@ class IDebugService(interface.Interface):
         Returns the time on the running instance, in (UTC/GMT) timezone in the
         form ‘yyyyMMddHHmmss’. This format is used for the timestamp that is part of
         the security mechanism.
+        """
+
+
+class ITagService(interface.Interface):
+    """
+    Service that provides methods for managing and interacting with
+    tags on the SCORM Cloud.
+
+    The API allows tagging learners and registration, but that is not
+    yet implemented.
+    """
+
+    service = Object(IScormCloudService,
+                     title=u"The scorm cloud service")
+
+    def get_scorm_tags(scorm_id):
+        """
+        Get tags for the given scorm_id
+
+        :param scorm_id: the scorm_id to fetch tags for
+        :return: an iterable of tags
+        """
+
+    def set_scorm_tags(scorm_id, tag_list_str):
+        """
+        Set tags for the given scorm_id
+
+        :param scorm_id: the scorm_id to set tags on
+        :param tag_list_str: A comma separated list of tags
+        """
+
+    def add_scorm_tag(scorm_id, tag):
+        """
+        Add a tag for the given scorm_id
+
+        :param scorm_id: the scorm_id to add the tag
+        :param tag: The new tag
+        """
+
+    def remove_scorm_tag(scorm_id, tag):
+        """
+        Remove a tag for the given scorm_id
+
+        :param scorm_id: the scorm_id to remove the tag
+        :param tag: The tag to remove
         """
 
 

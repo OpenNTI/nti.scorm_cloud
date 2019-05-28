@@ -207,13 +207,19 @@ class ImportResult(object):
 
 
 class CourseData(object):
+
     title = ""
     courseId = ""
     numberOfVersions = 1
     numberOfRegistrations = 0
+    tags = []
 
     def __init__(self, courseDataElement=None):
         if courseDataElement is not None:
+            tags = []
+            for tag_element in courseDataElement.getElementsByTagName("tag"):
+                tags.append(tag_element.childNodes[0].nodeValue)
+            self.tags = tags
             attributes = courseDataElement.attributes
             self.courseId = attributes['id'].value
             self.title = attributes['title'].value

@@ -23,6 +23,8 @@ from nti.scorm_cloud.client.invitation import InvitationService
 
 from nti.scorm_cloud.client.registration import RegistrationService
 
+from nti.scorm_cloud.client.tag import TagService
+
 from nti.scorm_cloud.interfaces import IScormCloudService
 
 logger = __import__('logging').getLogger(__name__)
@@ -67,6 +69,9 @@ class ScormCloudService(object):
 
     def get_course_service(self):
         return CourseService(self)
+
+    def get_tag_service(self):
+        return TagService(self)
 
     def get_debug_service(self):
         return DebugService(self)
