@@ -19,14 +19,63 @@ except ImportError:  # pragma: no cover
 
 from zope import interface
 
-from nti.scorm_cloud.interfaces import ITagSettings
-from nti.scorm_cloud.interfaces import IWidgetSettings
+from nti.scorm_cloud.interfaces import IAccountInfo
+from nti.scorm_cloud.interfaces import IAccountUsageInfo
 from nti.scorm_cloud.interfaces import IReportingService
-from nti.scorm_cloud.interfaces import IDateRangeSettings
+from nti.scorm_cloud.interfaces import IUnmarshalled
+
+from nti.scorm_cloud.minidom import getChildDatetime
+from nti.scorm_cloud.minidom import getChildText
+from nti.scorm_cloud.minidom import getFirstChild
 
 logger = __import__('logging').getLogger(__name__)
 
+@interface.implementer(IAccountUsageInfo, IUnmarshalled)
+class AccountUsageInfo(object):
 
+    @classmethod
+    def createFromMinidom(cls, node):
+        info = cls()
+        info.fromMinidom(node)
+        return info
+
+    def fromMinidom(self, node):
+        self._node = node
+        self.reg_count = IAccountUsageInfo['reg_count'].fromUnicode(
+            getChildText(node, 'regcount'))
+        self.total_registrations = IAccountUsageInfo['total_registrations'].fromUnicode(
+            getChildText(node, 'totalregistrations'))
+        self.total_courses = IAccountUsageInfo['total_courses'].fromUnicode(
+            getChildText(node, 'totalcourses'))
+
+        self.month_start = getChildDatetime(node, 'monthstart')
+
+@interface.implementer(IAccountInfo, IUnmarshalled)
+class AccountInfo(object):
+
+    @classmethod
+    def createFromMinidom(cls, node):
+        info = cls()
+        info.fromMinidom(node)
+        return info
+
+    def fromMinidom(self, node):
+        self._node = node
+
+        usage_dom = getFirstChild(node, 'usage')
+        self.usage = AccountUsageInfo.createFromMinidom(usage_dom) if usage_dom else None
+
+        self.email = getChildText(node, 'email')
+        self.firstname = getChildText(node, 'firstname')
+        self.lastname = getChildText(node, 'lastname')
+        self.account_type = getChildText(node, 'accounttype')
+        self.reg_limit = IAccountInfo['reg_limit'].fromUnicode(
+            getChildText(node, 'reglimit'))
+        self.strict_limit = IAccountInfo['strict_limit'].fromUnicode(
+            getChildText(node, 'strictlimit'))
+
+        self.create_date = getChildDatetime(node, 'createdate')
+        
 @interface.implementer(IReportingService)
 class ReportingService(object):
 
@@ -34,7 +83,9 @@ class ReportingService(object):
         self.service = service
 
     def get_account_info(self):
-        return self.service.make_call('rustici.reporting.getAccountInfo')
+        resp = self.service.make_call('rustici.reporting.getAccountInfo')
+        resp = resp.getElementsByTagName('account')
+        return AccountInfo.createFromMinidom(resp[0]) if resp else None
 
     def get_reportage_date(self):
         reportUrl = (
@@ -115,99 +166,3 @@ class ReportingService(object):
         return reportUrl
 
 
-@interface.implementer(IWidgetSettings)
-class WidgetSettings(object):
-
-    def __init__(self, dateRangeSettings=None, tagSettings=None):
-        self.tagSettings = tagSettings
-        self.dateRangeSettings = dateRangeSettings
-
-        self.courseId = None
-        self.learnerId = None
-
-        self.showTitle = True
-        self.vertical = False
-        self.public = True
-        self.standalone = True
-        self.iframe = False
-        self.expand = True
-        self.scriptBased = True
-
-        self.divname = u''
-        self.embedded = True
-        self.viewall = True
-        self.export = True
-
-    def get_url_encoding(self):
-        widgetUrlStr = ''
-        if self.courseId:
-            widgetUrlStr += '&courseId=' + urllib_parse.quote(self.courseId)
-        if self.learnerId:
-            widgetUrlStr += '&learnerId=' + urllib_parse.quote(self.learnerId)
-
-        widgetUrlStr += '&showTitle=' + str(self.showTitle).lower()
-        widgetUrlStr += '&standalone=' + str(self.standalone).lower()
-        if self.iframe:
-            widgetUrlStr += '&iframe=true'
-        widgetUrlStr += '&expand=' + str(self.expand).lower()
-        widgetUrlStr += '&scriptBased=' + str(self.scriptBased).lower()
-        widgetUrlStr += '&divname=' + urllib_parse.quote(self.divname)
-        widgetUrlStr += '&vertical=' + str(self.vertical).lower()
-        widgetUrlStr += '&embedded=' + str(self.embedded).lower()
-
-        if self.dateRangeSettings is not None:
-            widgetUrlStr += self.dateRangeSettings.get_url_encoding()
-
-        if self.tagSettings is not None:
-            widgetUrlStr += self.tagSettings.get_url_encoding()
-
-        return widgetUrlStr
-
-
-@interface.implementer(IDateRangeSettings)
-class DateRangeSettings(object):
-
-    def __init__(self, dateRangeType, dateRangeStart, dateRangeEnd, dateCriteria):
-        self.dateRangeEnd = dateRangeEnd
-        self.dateCriteria = dateCriteria
-        self.dateRangeType = dateRangeType
-        self.dateRangeStart = dateRangeStart
-
-    def get_url_encoding(self):
-        result = ''
-        if self.dateRangeType == 'selection':
-            result += '&dateRangeType=c'
-            result += '&dateRangeStart=' + urllib_parse.quote(self.dateRangeStart)
-            result += '&dateRangeEnd=' + urllib_parse.quote(self.dateRangeEnd)
-        else:
-            result += '&dateRangeType=' + urllib_parse.quote(self.dateRangeType)
-        result += '&dateCriteria=' + urllib_parse.quote(self.dateCriteria)
-        return result
-
-
-@interface.implementer(ITagSettings)
-class TagSettings(object):
-
-    def __init__(self):
-        self.tags = {'course': set(), 'learner': set(), 'registration': set()}
-
-    def add(self, tagType, tagValue):
-        self.tags[tagType].add(tagValue)
-        return self
-
-    def get_tag_str(self, tagType):
-        return ','.join(sorted(self.tags[tagType])) + "|_all"
-
-    def get_view_tag_str(self, tagType):
-        return ','.join(sorted(self.tags[tagType]))
-
-    def get_url_encoding(self):
-        result = []
-        for k in self.tags.keys():
-            if self.tags[k]:
-                result.extend(('&', k))
-                result.extend(('Tags=', urllib_parse.quote(self.get_tag_str(k))))
-                result.extend(('&view', k.capitalize()))
-                result.extend(('TagGroups=',
-                               urllib_parse.quote(self.get_view_tag_str(k))))
-        return ''.join(result)
