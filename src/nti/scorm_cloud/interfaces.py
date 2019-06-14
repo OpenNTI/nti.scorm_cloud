@@ -699,7 +699,6 @@ class IWidgetSettings(interface.Interface):
         Reportage widget URL.
         """
 
-
 class IReportingService(interface.Interface):
     """
     Service that provides methods for interacting with the Reportage service.
