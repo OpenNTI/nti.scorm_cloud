@@ -126,6 +126,9 @@ class ReportingService(object):
     def __init__(self, service):
         self.service = service
 
+    def get_account_info(self):
+        return self.service.make_call('rustici.reporting.getAccountInfo')
+
     def get_reportage_date(self):
         reportUrl = (
             self._get_reportage_service_url() +

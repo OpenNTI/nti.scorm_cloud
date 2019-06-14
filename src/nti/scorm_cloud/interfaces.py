@@ -710,6 +710,11 @@ class IReportingService(interface.Interface):
         Gets the date/time, according to Reportage.
         """
 
+    def get_account_info():
+        """
+        Returns information about the account this service is tied to
+        """
+    
     def get_reportage_auth(navperm, allowadmin):
         """
         Authenticates against the Reportage application, returning a session
