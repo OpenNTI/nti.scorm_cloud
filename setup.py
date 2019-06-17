@@ -52,6 +52,7 @@ setup(
     namespace_packages=['nti'],
     tests_require=TESTS_REQUIRE,
     install_requires=[
+        'python-dateutil',
         'nti.common',
         'setuptools',
         'six',

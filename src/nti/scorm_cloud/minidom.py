@@ -8,6 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from dateutil.parser import parse
+
 from xml.dom.minidom import Document
 
 
@@ -39,6 +41,9 @@ def getChildNodesByName(node, name):
             result.append(node)
     return result
 
+def getChildDatetime(node, name):
+    date_str = getChildText(node, name)
+    return parse(date_str)
 
 def getChildText(node, name):
     nodes = getChildNodesByName(node, name)
