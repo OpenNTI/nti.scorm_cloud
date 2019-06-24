@@ -106,7 +106,8 @@ class CourseService(object):
         request = self.service.request()
         request.parameters['courseid'] = courseid
         result = request.call_service('rustici.course.getCourseDetail')
-        courses = CourseData(result)
+        course_result = result.documentElement.getElementsByTagName('course')[0]
+        courses = CourseData(course_result)
         return courses
 
     def get_course_list(self, courseIdFilterRegex=None, tags=None):
