@@ -585,6 +585,13 @@ class ICourseService(interface.Interface):
         :param courseid: the unique identifier for the course
         """
 
+    def get_course_detail(courseid):
+        """
+        Returns the course details (CourseData) for the given courseid.
+
+        :param courseid: the unique identifier for the course
+        """
+
     def get_property_editor_url(courseid, stylesheetUrl=None,
                                 notificationFrameUrl=None):
         """

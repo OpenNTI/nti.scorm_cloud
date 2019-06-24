@@ -99,6 +99,16 @@ class CourseService(object):
             request.parameters['path'] = path
         return request.call_service('rustici.course.getAssets')
 
+    def get_course_detail(self, courseid):
+        """
+        Return the scorm detail for the given scorm course_id.
+        """
+        request = self.service.request()
+        request.parameters['courseid'] = courseid
+        result = request.call_service('rustici.course.getCourseDetail')
+        courses = CourseData(result)
+        return courses
+
     def get_course_list(self, courseIdFilterRegex=None, tags=None):
         """
         Fetch the scorm content, filtering by the scorm courseId or
