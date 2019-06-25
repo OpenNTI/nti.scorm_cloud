@@ -8,6 +8,7 @@ from __future__ import absolute_import
 # pylint: disable=protected-access,too-many-public-methods
 
 from hamcrest import is_
+from hamcrest import none
 from hamcrest import not_none
 from hamcrest import has_length
 from hamcrest import assert_that
@@ -60,6 +61,92 @@ class TestCourseService(unittest.TestCase):
                                    'message', 'Import Successful',
                                    'parserWarnings', ['[warning text]'],
                                    'wasSuccessful', True))
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_import_uploaded_course_async(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        course = service.get_course_service()
+
+        course_id = 'courseid'
+        path = BytesIO(b'data')
+        reply = """
+        <token>
+           <id>e2bfa26e-2e96-48e3-86a6-f435fba6dccb</id>
+        </token>
+        """
+        reply = '<rsp stat="ok">%s</rsp>' % reply
+        data = fake_response(content=reply)
+        session = fudge.Fake().expects('post').returns(data)
+        mock_ss.is_callable().returns(session)
+        token = course.import_uploaded_course_async(course_id, path)
+        assert_that(token, is_('e2bfa26e-2e96-48e3-86a6-f435fba6dccb'))
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_async_import_result(self, mock_ss):
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        course = service.get_course_service()
+
+        token = 'e2bfa26e-2e96-48e3-86a6-f435fba6dccb'
+        success_reply = """
+           <status>finished</status>
+           <importresults>
+             <importresult successful="true">
+             <title>Photoshop Example -- Competency</title>
+             <message>Import Successful</message>
+             </importresult>
+           </importresults>
+        """
+        success_reply = '<rsp stat="ok">%s</rsp>' % success_reply
+        data = fake_response(content=success_reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        import_result = course.get_async_import_result(token)
+        assert_that(import_result, has_properties('title', 'Photoshop Example -- Competency',
+                                                  'status', 'finished',
+                                                  'error_message', none()))
+
+        error_reply = """
+           <status>error</status>
+           <error>Error during import</error>
+        """
+        error_reply = '<rsp stat="ok">%s</rsp>' % error_reply
+        data = fake_response(content=error_reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        import_result = course.get_async_import_result(token)
+        assert_that(import_result, has_properties('title', none(),
+                                                  'status', 'error',
+                                                  'error_message', 'Error during import'))
+
+        running_reply = """
+           <status>running</status>
+        """
+        running_reply = '<rsp stat="ok">%s</rsp>' % running_reply
+        running_reply = '<rsp stat="ok">%s</rsp>' % running_reply
+        data = fake_response(content=running_reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        import_result = course.get_async_import_result(token)
+        assert_that(import_result, has_properties('title', none(),
+                                                  'status', 'running',
+                                                  'error_message', none()))
+
+
+        created_reply = """
+           <status>created</status>
+        """
+        created_reply = '<rsp stat="ok">%s</rsp>' % created_reply
+        created_reply = '<rsp stat="ok">%s</rsp>' % created_reply
+        data = fake_response(content=created_reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        import_result = course.get_async_import_result(token)
+        assert_that(import_result, has_properties('title', none(),
+                                                  'status', 'created',
+                                                  'error_message', none()))
+
 
     @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
     def test_delete_course(self, mock_ss):

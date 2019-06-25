@@ -537,6 +537,22 @@ class ICourseService(interface.Interface):
         :param path: the relative path to the zip file to import
         """
 
+    def import_uploaded_course_async(courseid, path):
+        """
+        Import the given scorm course package asynchronously, returning
+        the upload token.
+
+        :param courseid: the unique identifier for the course
+        :param path: the relative path to the zip file to import
+        """
+
+    def get_async_import_result(token):
+        """
+        Return the async import result.
+
+        :param token: the async import token
+        """
+
     def delete_course(courseid):
         """
         Deletes the specified course.
@@ -711,29 +727,29 @@ class IWidgetSettings(interface.Interface):
 class IAccountUsageInfo(interface.Interface):
 
     month_start = Datetime(title=u'The datetime that started this billing cycle')
-    
+
     reg_count = Int(title=u'The number of registrations this month')
-    
+
     total_registrations = Int(title=u'The total number of registrations')
-    
+
     total_courses = Int(title=u'The total number of courses')
 
 class IAccountInfo(interface.Interface):
 
     email = TextLine(title=u"The email address associated with the account")
-    
+
     firstname = TextLine(title=u"The account\'s first name")
-    
+
     lastname = TextLine(title=u"The account\' last name")
-    
+
     account_type = TextLine(title=u"The account type this account is setup for")
-    
+
     reg_limit = Int(title=u'The registration limit associated with this account')
-    
+
     strict_limit = Bool(title=u'Is the registration limit strict or does it allow overages')
-    
+
     create_date = Datetime(title=u'The timestamp this account was created at')
-    
+
     usage = Object(IAccountUsageInfo, title=u'The current usage information for this account')
 
 class IReportingService(interface.Interface):
@@ -753,7 +769,7 @@ class IReportingService(interface.Interface):
         :return: the account information
         :rtype: :class:`.IAccountInfo`
         """
-    
+
     def get_reportage_auth(navperm, allowadmin):
         """
         Authenticates against the Reportage application, returning a session

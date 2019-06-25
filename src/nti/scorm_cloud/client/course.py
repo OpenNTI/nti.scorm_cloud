@@ -87,6 +87,32 @@ class CourseService(object):
         result = ImportResult.list_from_result(result)
         return result
 
+    def _get_token(self, xmldoc):
+        tokens = xmldoc.getElementsByTagName('token')
+        token = tokens[0]
+        id_node = token.getElementsByTagName('id')[0]
+        return id_node.childNodes[0].nodeValue
+
+    def import_uploaded_course_async(self, courseid, path):
+        """
+        Import the given scorm course package asynchronously, returning
+        the token.
+        """
+        request = self.service.request()
+        request.parameters['courseid'] = courseid
+        request.file_ = get_source(path)
+        result = request.call_service('rustici.course.importCourseAsync')
+        return self._get_token(result)
+
+    def get_async_import_result(self, token):
+        """
+        Return the async import result for the given token.
+        """
+        request = self.service.request()
+        request.parameters['token'] = token
+        result = request.call_service('rustici.course.getAsyncImportResult')
+        return AsyncImportResult(result)
+
     def delete_course(self, courseid):
         request = self.service.request()
         request.parameters['courseid'] = courseid
@@ -265,6 +291,29 @@ class Metadata(object):
     def __init__(self, xmldoc):
         obj_element = xmldoc.documentElement.getElementsByTagName('object')[0]
         self.title = obj_element.getAttribute('title')
+
+
+
+class AsyncImportResult(object):
+    """
+    An object containing the information returned by `getAsyncImportResult`.
+    """
+
+    title = None
+    status = None
+    error_message = None
+
+    def __init__(self, xmldoc):
+        status_element = xmldoc.documentElement.getElementsByTagName('status')[0]
+        self.status = status_element.childNodes[0].nodeValue
+        if self.status == 'finished':
+            # Successful, get title
+            title_element = xmldoc.documentElement.getElementsByTagName('title')[0]
+            self.title = title_element.childNodes[0].nodeValue
+        elif self.status == 'error':
+            # Error, get error message
+            error_element = xmldoc.documentElement.getElementsByTagName('error')[0]
+            self.error_message = error_element.childNodes[0].nodeValue
 
 
 class UploadToken(object):
