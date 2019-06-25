@@ -15,9 +15,12 @@ from nti.common.string import is_true
 from nti.scorm_cloud.client.request import ScormUpdateError
 
 from nti.scorm_cloud.client.mixins import get_source
+from nti.scorm_cloud.client.mixins import nodecapture
 
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IUploadService
+
+from nti.scorm_cloud.minidom import getChildTextOrCDATA
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -110,8 +113,8 @@ class CourseService(object):
         """
         request = self.service.request()
         request.parameters['token'] = token
-        result = request.call_service('rustici.course.getAsyncImportResult')
-        return AsyncImportResult(result)
+        xmldoc = request.call_service('rustici.course.getAsyncImportResult')
+        return AsyncImportResult.fromMinidom(xmldoc)
 
     def delete_course(self, courseid):
         request = self.service.request()
@@ -303,18 +306,27 @@ class AsyncImportResult(object):
     status = None
     error_message = None
 
-    def __init__(self, xmldoc):
+    def __init__(self, title=None, status=None, error_message=None):
+        self.title = title
+        self.status = status
+        self.error_message = error_message
+
+    @classmethod
+    @nodecapture
+    def fromMinidom(cls, xmldoc):
+        title = None
+        error_message = None
         status_element = xmldoc.documentElement.getElementsByTagName('status')[0]
-        self.status = status_element.childNodes[0].nodeValue
-        if self.status == 'finished':
+        status = status_element.childNodes[0].nodeValue
+        if status == 'finished':
             # Successful, get title
             title_element = xmldoc.documentElement.getElementsByTagName('title')[0]
-            self.title = title_element.childNodes[0].nodeValue
-        elif self.status == 'error':
+            title = title_element.childNodes[0].nodeValue
+        elif status == 'error':
             # Error, get error message
             error_element = xmldoc.documentElement.getElementsByTagName('error')[0]
-            self.error_message = error_element.childNodes[0].nodeValue
-
+            error_message = error_element.childNodes[0].nodeValue
+        return cls(title=title, status=status, error_message=error_message)
 
 class UploadToken(object):
     server = ""
