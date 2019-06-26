@@ -20,8 +20,6 @@ from nti.scorm_cloud.client.mixins import nodecapture
 from nti.scorm_cloud.interfaces import ICourseService
 from nti.scorm_cloud.interfaces import IUploadService
 
-from nti.scorm_cloud.minidom import getChildTextOrCDATA
-
 logger = __import__('logging').getLogger(__name__)
 
 
@@ -319,14 +317,20 @@ class AsyncImportResult(object):
         status_element = xmldoc.documentElement.getElementsByTagName('status')[0]
         status = status_element.childNodes[0].nodeValue
         if status == 'finished':
+            import_result_node = xmldoc.documentElement.getElementsByTagName('importresult')[0]
+            import_result = ImportResult(import_result_node)
             # Successful, get title
-            title_element = xmldoc.documentElement.getElementsByTagName('title')[0]
-            title = title_element.childNodes[0].nodeValue
+            title = import_result.title
+            if not import_result.wasSuccessful:
+                # Another type of error
+                status = 'error'
+                error_message = import_result.message
         elif status == 'error':
             # Error, get error message
             error_element = xmldoc.documentElement.getElementsByTagName('error')[0]
             error_message = error_element.childNodes[0].nodeValue
         return cls(title=title, status=status, error_message=error_message)
+
 
 class UploadToken(object):
     server = ""
