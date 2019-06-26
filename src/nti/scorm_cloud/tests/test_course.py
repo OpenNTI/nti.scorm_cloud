@@ -107,6 +107,24 @@ class TestCourseService(unittest.TestCase):
                                                   'status', 'finished',
                                                   'error_message', none()))
 
+        unsuccessful_reply = """
+           <status>finished</status>
+           <importresults>
+             <importresult successful="false">
+             <title>Photoshop Example -- Competency</title>
+             <message>zip did not contain courses</message>
+             </importresult>
+           </importresults>
+        """
+        unsuccessful_reply = '<rsp stat="ok">%s</rsp>' % unsuccessful_reply
+        data = fake_response(content=unsuccessful_reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+        import_result = course.get_async_import_result(token)
+        assert_that(import_result, has_properties('title', 'Photoshop Example -- Competency',
+                                                  'status', 'error',
+                                                  'error_message', 'zip did not contain courses'))
+
         error_reply = """
            <status>error</status>
            <error>Error during import</error>
