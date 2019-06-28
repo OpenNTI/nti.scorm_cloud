@@ -4,6 +4,7 @@ from setuptools import find_packages
 
 entry_points = {
     'console_scripts': [
+        'nti_scorm_cloud_account_summary = nti.scorm_cloud.utils.account_summary:main'
     ],
 }
 
