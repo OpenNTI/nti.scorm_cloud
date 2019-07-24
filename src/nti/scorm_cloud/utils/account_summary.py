@@ -12,6 +12,9 @@ from getpass import getpass
 import requests
 from urlparse import urljoin
 
+import calendar
+from dateutil import parser as dt_parser
+
 SESSIONS_ENDPOINT = u'/api/cloud/sessions'
 USAGE_SUMMARY_ENDPOINT = u'/api/cloud/realm/usage-summary'
 
@@ -32,6 +35,12 @@ def fetch_account_usage_summary(base_url, session):
     resp.raise_for_status()
     return resp
 
+
+def _to_epoch(date_str):
+    dt = dt_parser.parse(date_str)
+    return calendar.timegm(dt.utctimetuple())
+
+
 def _gauge(title, *args, **kwargs):
     from prometheus_client import Gauge
 
@@ -51,6 +60,14 @@ def push_to_prometheus(usage, push_gateway, job):
     _gauge('job_last_success_unixtime',
            'Last time a batch job successfully finished',
            registry=registry).set_to_current_time()
+
+    _gauge('billing_period_start_date',
+           'When the current billing period started.',
+           registry=registry).set(_to_epoch(usage['billingPeriodStartDate']))
+    
+    _gauge('billing_period_end_date',
+           'When the current billing period ended.',
+           registry=registry).set(_to_epoch(usage['billingPeriodEndDate']))
 
     _gauge('total_registration_count',
            'The total number of registrations in this billing cycle',
