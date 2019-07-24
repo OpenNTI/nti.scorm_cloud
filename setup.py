@@ -70,6 +70,9 @@ setup(
             'repoze.sphinx.autointerface',
             'sphinx_rtd_theme',
         ],
+        'prometheus': [
+            'prometheus_client'
+        ]
     },
     entry_points=entry_points,
 )

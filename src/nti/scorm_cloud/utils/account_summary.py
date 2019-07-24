@@ -32,6 +32,48 @@ def fetch_account_usage_summary(base_url, session):
     resp.raise_for_status()
     return resp
 
+def _gauge(title, *args, **kwargs):
+    from prometheus_client import Gauge
+
+    # TODO is this the proper way to do this? We want to wrap the Guage
+    # creation to prefix the title and send all other args kwargs through.
+    # can our additional kwarg prefix not be defined in the function definition?
+    prefix = kwargs.pop('prefix', 'scorm_cloud')
+    return Gauge('%s_%s' % (prefix, title), *args, **kwargs)
+
+
+def push_to_prometheus(usage, push_gateway, job):
+    from prometheus_client import CollectorRegistry, push_to_gateway
+
+    registry = CollectorRegistry()
+
+    # Set some top level gauges based on our summary
+    _gauge('job_last_success_unixtime',
+           'Last time a batch job successfully finished',
+           registry=registry).set_to_current_time()
+
+    _gauge('total_registration_count',
+           'The total number of registrations in this billing cycle',
+           registry=registry).set(usage['registrationCount'])
+
+    _gauge('total_registration_limit',
+           'The total registration limit for this billing cycle',
+           registry=registry).set(usage['registrationLimit'])
+
+    # Set up a labeled guage for each application name
+    g = _gauge('registration_count',
+               'The registration limit for each application in this billing cycle',
+               labelnames=['scorm_cloud_application'],
+               registry=registry)
+
+    for application in usage['applications']:
+        name = application['applicationName']
+        count = application['registrationCount']
+        g.labels(name).set(count)
+
+    push_to_gateway(push_gateway, job=job, registry=registry)
+
+
 def main():
     parser = argparse.ArgumentParser(description=u'Fetch account usage information from ScormCloud')
     
@@ -55,10 +97,30 @@ def main():
                         required=True,
                         help=u'The scorm cloud password or blank to be prompted')
 
+    # Optional arguments for pusing data to a prometheus monitoring system
+    parser.add_argument(u'-t', u'--track',
+                        type=str,
+                        action=u'store',
+                        dest=u'push_gateway',
+                        required=False,
+                        help=u'The host:port for a prometheus push gateway')
+    parser.add_argument(u'-j', u'--job-name',
+                        type=str,
+                        action=u'store',
+                        dest=u'job_name',
+                        default=u'scorm_cloud_account_summary',
+                        required=False,
+                        help=u'The push_gateway job name to use')
+
     arguments = parser.parse_args()
     if arguments.password is None:
         arguments.password = getpass(u'ScormCloud Password: ')
     session = establish_session(arguments.base_url,
                                 arguments.username,
                                 arguments.password)
-    print fetch_account_usage_summary(arguments.base_url, session).text
+    usage = fetch_account_usage_summary(arguments.base_url, session).json()
+
+    if arguments.push_gateway:
+        push_to_prometheus(usage, arguments.push_gateway, arguments.job_name)
+
+    return usage
