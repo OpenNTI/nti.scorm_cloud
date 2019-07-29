@@ -83,7 +83,7 @@ def push_to_prometheus(usage, push_gateway, job):
                labelnames=['scorm_cloud_application'],
                registry=registry)
 
-    for application in usage['applications']:
+    for application in usage.get('applications', ()):
         name = application['applicationName']
         count = application['registrationCount']
         g.labels(name).set(count)
