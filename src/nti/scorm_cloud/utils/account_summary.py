@@ -18,6 +18,41 @@ from dateutil import parser as dt_parser
 SESSIONS_ENDPOINT = u'/api/cloud/sessions'
 USAGE_SUMMARY_ENDPOINT = u'/api/cloud/realm/usage-summary'
 
+SCORM_CLOUD_PRICING = {
+    'trial': {
+        'registrations': 10,
+        'pricing': 0,
+        'overage': None
+    },
+    'little': {
+        'registrations': 50,
+        'pricing': 75,
+        'overage': 3
+    },
+    'medium': {
+        'registrations': 100,
+        'pricing': 150,
+        'overage': 3
+    },
+    'big': {
+        'registrations': 300,
+        'pricing': 300,
+        'overage': 0.33
+    },
+    'bigger': {
+        'registrations': 3000,
+        'pricing': 1000,
+        'overage': 0.1
+    },
+    # TODO: confirm key name
+    'evenBigger': {
+        'registrations': 60000,
+        'pricing': 5000,
+        'overage': 0.075
+    }
+}
+
+
 def establish_session(base_url, username, password):
     """
     Establishes session cookies for the provided username and password.
@@ -25,9 +60,11 @@ def establish_session(base_url, username, password):
     Returns cookies suitable for subsequent requests
     """
     session_url = urljoin(base_url, SESSIONS_ENDPOINT)
-    resp = requests.post(session_url, data={u'email': username, u'password': password})
+    resp = requests.post(session_url, data={
+                         u'email': username, u'password': password})
     resp.raise_for_status()
     return resp.cookies
+
 
 def fetch_account_usage_summary(base_url, session):
     usage_url = urljoin(base_url, USAGE_SUMMARY_ENDPOINT)
@@ -39,6 +76,21 @@ def fetch_account_usage_summary(base_url, session):
 def _to_epoch(date_str):
     dt = dt_parser.parse(date_str)
     return calendar.timegm(dt.utctimetuple())
+
+
+def calculate_account_cost(account_type, registration_count):
+    account_pricing = SCORM_CLOUD_PRICING[account_type]
+    overages = registration_count - account_pricing['registrations']
+    # Clamp to 0 if we have no overages
+    overages = max(overages, 0)
+    return account_pricing['pricing'] + overages * account_pricing['overage']
+
+
+def find_optimal_account(registration_count):
+    # No need to be fancy, just brute force it
+    account_prices = map(lambda a:
+                         {'account_type': a, 'cost': calculate_account_cost(a, registration_count)}, SCORM_CLOUD_PRICING.keys())
+    return min(account_prices, key=lambda a: a['cost'])
 
 
 def _gauge(title, *args, **kwargs):
@@ -64,7 +116,7 @@ def push_to_prometheus(usage, push_gateway, job):
     _gauge('billing_period_start_date',
            'When the current billing period started.',
            registry=registry).set(_to_epoch(usage['billingPeriodStartDate']))
-    
+
     _gauge('billing_period_end_date',
            'When the current billing period ended.',
            registry=registry).set(_to_epoch(usage['billingPeriodEndDate']))
@@ -88,12 +140,30 @@ def push_to_prometheus(usage, push_gateway, job):
         count = application['registrationCount']
         g.labels(name).set(count)
 
+    _gauge('current_account_type',
+           'The current SCORM Cloud account type in use',
+           registry=registry).set(usage['accountType'])
+
+    _gauge('current_cost',
+           'The cost of the current account type based on the current number of registrations',
+           registry=registry).set(calculate_account_cost(usage['accountType'], usage['registrationCount']))
+
+    optimal_account = find_optimal_account(usage['registrationCount'])
+    _gauge('optimal_account_type',
+           'The optimal SCORM Cloud account type in use',
+           registry=registry).set(optimal_account['account_type'])
+
+    _gauge('optimal_cost',
+           'The cost of the optimal account type based on the current number of registrations',
+           registry=registry).set(optimal_account['cost'])
+
     push_to_gateway(push_gateway, job=job, registry=registry)
 
 
 def main():
-    parser = argparse.ArgumentParser(description=u'Fetch account usage information from ScormCloud')
-    
+    parser = argparse.ArgumentParser(
+        description=u'Fetch account usage information from ScormCloud')
+
     parser.add_argument(u'--base-url',
                         type=str,
                         action=u'store',
