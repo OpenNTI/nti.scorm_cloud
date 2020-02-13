@@ -19,11 +19,6 @@ SESSIONS_ENDPOINT = u'/api/cloud/sessions'
 USAGE_SUMMARY_ENDPOINT = u'/api/cloud/realm/usage-summary'
 
 SCORM_CLOUD_PRICING = {
-    'trial': {
-        'registrations': 10,
-        'pricing': 0,
-        'overage': None
-    },
     'little': {
         'registrations': 50,
         'pricing': 75,
@@ -140,22 +135,18 @@ def push_to_prometheus(usage, push_gateway, job):
         count = application['registrationCount']
         g.labels(name).set(count)
 
-    _gauge('current_account_type',
-           'The current SCORM Cloud account type in use',
-           registry=registry).set(usage['accountType'])
-
-    _gauge('current_cost',
+    _gauge('current_account_cost',
            'The cost of the current account type based on the current number of registrations',
-           registry=registry).set(calculate_account_cost(usage['accountType'], usage['registrationCount']))
+           ['account_type'],
+           registry=registry
+           ).labels(account_type=usage['accountType']).set(calculate_account_cost(usage['accountType'], usage['registrationCount']))
 
     optimal_account = find_optimal_account(usage['registrationCount'])
-    _gauge('optimal_account_type',
-           'The optimal SCORM Cloud account type in use',
-           registry=registry).set(optimal_account['account_type'])
-
-    _gauge('optimal_cost',
+    _gauge('optimal_account_cost',
            'The cost of the optimal account type based on the current number of registrations',
-           registry=registry).set(optimal_account['cost'])
+           ['account_type'],
+           registry=registry
+           ).labels(account_type=optimal_account['account_type']).set(optimal_account['cost'])
 
     push_to_gateway(push_gateway, job=job, registry=registry)
 
