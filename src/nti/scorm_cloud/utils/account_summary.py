@@ -18,6 +18,36 @@ from dateutil import parser as dt_parser
 SESSIONS_ENDPOINT = u'/api/cloud/sessions'
 USAGE_SUMMARY_ENDPOINT = u'/api/cloud/realm/usage-summary'
 
+SCORM_CLOUD_PRICING = {
+    'little': {
+        'registrations': 50,
+        'pricing': 75,
+        'overage': 3
+    },
+    'medium': {
+        'registrations': 100,
+        'pricing': 150,
+        'overage': 3
+    },
+    'big': {
+        'registrations': 300,
+        'pricing': 300,
+        'overage': 0.33
+    },
+    'bigger': {
+        'registrations': 3000,
+        'pricing': 1000,
+        'overage': 0.1
+    },
+    # TODO: confirm key name
+    'evenBigger': {
+        'registrations': 60000,
+        'pricing': 5000,
+        'overage': 0.075
+    }
+}
+
+
 def establish_session(base_url, username, password):
     """
     Establishes session cookies for the provided username and password.
@@ -25,9 +55,11 @@ def establish_session(base_url, username, password):
     Returns cookies suitable for subsequent requests
     """
     session_url = urljoin(base_url, SESSIONS_ENDPOINT)
-    resp = requests.post(session_url, data={u'email': username, u'password': password})
+    resp = requests.post(session_url, data={
+                         u'email': username, u'password': password})
     resp.raise_for_status()
     return resp.cookies
+
 
 def fetch_account_usage_summary(base_url, session):
     usage_url = urljoin(base_url, USAGE_SUMMARY_ENDPOINT)
@@ -41,6 +73,14 @@ def _to_epoch(date_str):
     return calendar.timegm(dt.utctimetuple())
 
 
+def calculate_account_cost(account_type, registration_count):
+    account_pricing = SCORM_CLOUD_PRICING[account_type]
+    overages = registration_count - account_pricing['registrations']
+    # Clamp to 0 if we have no overages
+    overages = max(overages, 0)
+    return account_pricing['pricing'] + overages * account_pricing['overage']
+
+
 def _gauge(title, *args, **kwargs):
     from prometheus_client import Gauge
 
@@ -52,7 +92,7 @@ def _gauge(title, *args, **kwargs):
 
 
 def push_to_prometheus(usage, push_gateway, job):
-    from prometheus_client import CollectorRegistry, push_to_gateway
+    from prometheus_client import CollectorRegistry, push_to_gateway, Enum
 
     registry = CollectorRegistry()
 
@@ -64,7 +104,7 @@ def push_to_prometheus(usage, push_gateway, job):
     _gauge('billing_period_start_date',
            'When the current billing period started.',
            registry=registry).set(_to_epoch(usage['billingPeriodStartDate']))
-    
+
     _gauge('billing_period_end_date',
            'When the current billing period ended.',
            registry=registry).set(_to_epoch(usage['billingPeriodEndDate']))
@@ -88,12 +128,27 @@ def push_to_prometheus(usage, push_gateway, job):
         count = application['registrationCount']
         g.labels(name).set(count)
 
+    g = _gauge('account_costs',
+               'The costs of each account type based on the current number of registrations',
+               ['account_type'],
+               registry=registry)
+
+    for account_type in SCORM_CLOUD_PRICING.keys():
+        g.labels(account_type).set(calculate_account_cost(
+            account_type, usage['registrationCount']))
+
+    _gauge('current_cost',
+           'The cost of the current account type based on the current number of registrations',
+           registry=registry
+           ).set(calculate_account_cost(usage['accountType'], usage['registrationCount']))
+
     push_to_gateway(push_gateway, job=job, registry=registry)
 
 
 def main():
-    parser = argparse.ArgumentParser(description=u'Fetch account usage information from ScormCloud')
-    
+    parser = argparse.ArgumentParser(
+        description=u'Fetch account usage information from ScormCloud')
+
     parser.add_argument(u'--base-url',
                         type=str,
                         action=u'store',
