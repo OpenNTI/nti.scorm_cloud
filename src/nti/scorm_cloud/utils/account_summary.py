@@ -81,13 +81,6 @@ def calculate_account_cost(account_type, registration_count):
     return account_pricing['pricing'] + overages * account_pricing['overage']
 
 
-def find_optimal_account(registration_count):
-    # No need to be fancy, just brute force it
-    account_prices = map(lambda a:
-                         {'account_type': a, 'cost': calculate_account_cost(a, registration_count)}, SCORM_CLOUD_PRICING.keys())
-    return min(account_prices, key=lambda a: a['cost'])
-
-
 def _gauge(title, *args, **kwargs):
     from prometheus_client import Gauge
 
@@ -99,7 +92,7 @@ def _gauge(title, *args, **kwargs):
 
 
 def push_to_prometheus(usage, push_gateway, job):
-    from prometheus_client import CollectorRegistry, push_to_gateway
+    from prometheus_client import CollectorRegistry, push_to_gateway, Enum
 
     registry = CollectorRegistry()
 
@@ -135,18 +128,19 @@ def push_to_prometheus(usage, push_gateway, job):
         count = application['registrationCount']
         g.labels(name).set(count)
 
-    _gauge('current_account_cost',
-           'The cost of the current account type based on the current number of registrations',
-           ['account_type'],
-           registry=registry
-           ).labels(account_type=usage['accountType']).set(calculate_account_cost(usage['accountType'], usage['registrationCount']))
+    g = _gauge('account_costs',
+               'The costs of each account type based on the current number of registrations',
+               ['account_type'],
+               registry=registry)
 
-    optimal_account = find_optimal_account(usage['registrationCount'])
-    _gauge('optimal_account_cost',
-           'The cost of the optimal account type based on the current number of registrations',
-           ['account_type'],
+    for account_type in SCORM_CLOUD_PRICING.keys():
+        g.labels(account_type).set(calculate_account_cost(
+            account_type, usage['registrationCount']))
+
+    _gauge('current_cost',
+           'The cost of the current account type based on the current number of registrations',
            registry=registry
-           ).labels(account_type=optimal_account['account_type']).set(optimal_account['cost'])
+           ).set(calculate_account_cost(usage['accountType'], usage['registrationCount']))
 
     push_to_gateway(push_gateway, job=job, registry=registry)
 
