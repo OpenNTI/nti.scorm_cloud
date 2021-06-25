@@ -34,6 +34,34 @@ class TestCourseService(unittest.TestCase):
     layer = SharedConfiguringTestLayer
 
     @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
+    def test_get_course_detail(self, mock_ss):
+        reply = """
+        <rsp stat="ok">
+        <course id="31796ffa-e7b0-4848-a8dd-45a8e0933482" registrations="0" size="3180" title="ASPIRE Alpha" versions="1">
+            <versions><version><versionId><![CDATA[0]]></versionId>
+            <updateDate><![CDATA[2021-06-22T18:57:00.000+0000]]></updateDate>
+            </version></versions>
+            <tags><tag><![CDATA[6819436859104098208]]></tag><tag><![CDATA[alpha.dev]]></tag></tags>
+            <learningStandard><![CDATA[cmi5]]></learningStandard>
+            <createDate>2021-06-22T18:57:00.000+0000</createDate>
+        </course>
+        </rsp>
+        """
+
+        service = ScormCloudService.withargs("appid", "secret",
+                                             "http://cloud.scorm.com/api")
+        course = service.get_course_service()
+
+        data = fake_response(content=reply)
+        session = fudge.Fake().expects('get').returns(data)
+        mock_ss.is_callable().returns(session)
+
+        course_data = course.get_course_detail('31796ffa-e7b0-4848-a8dd-45a8e0933482')
+        assert_that(course_data, has_properties('title', 'ASPIRE Alpha',
+                                                'tags', ['6819436859104098208', 'alpha.dev'],
+                                                'learningStandard', 'cmi5'))
+
+    @fudge.patch('nti.scorm_cloud.client.request.ServiceRequest.session')
     def test_import_uploaded_course(self, mock_ss):
         service = ScormCloudService.withargs("appid", "secret",
                                              "http://cloud.scorm.com/api")

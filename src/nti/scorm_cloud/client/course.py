@@ -251,6 +251,7 @@ class CourseData(object):
     numberOfVersions = 1
     numberOfRegistrations = 0
     tags = []
+    learningStandard = None
 
     def __init__(self, courseDataElement=None):
         if courseDataElement is not None:
@@ -263,6 +264,11 @@ class CourseData(object):
             self.title = attributes['title'].value
             self.numberOfVersions = attributes['versions'].value
             self.numberOfRegistrations = attributes['registrations'].value
+
+            _ls = courseDataElement.getElementsByTagName('learningStandard')
+            if _ls and _ls[0].firstChild:
+                self.learningStandard = _ls[0].firstChild.nodeValue or None
+                
 
     @classmethod
     def list_from_result(cls, xmldoc):
