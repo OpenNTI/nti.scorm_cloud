@@ -62,13 +62,14 @@ setup(
         'zope.interface',
         'zope.schema',
         'zope.security',
+        'rustici_software_cloud_v2==1.0.2'
     ],
     extras_require={
         'test': TESTS_REQUIRE,
         'docs': [
             'Sphinx',
             'repoze.sphinx.autointerface',
-            'sphinx_rtd_theme',
+            'sphinx_rtd_theme'
         ],
         'prometheus': [
             'prometheus_client'
