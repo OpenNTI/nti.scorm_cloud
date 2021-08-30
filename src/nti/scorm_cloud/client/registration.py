@@ -14,6 +14,7 @@ from zope import interface
 
 from rustici_software_cloud_v2.api.registration_api import RegistrationApi as SCV2RegistrationApi
 from rustici_software_cloud_v2.models.launch_link_request_schema import LaunchLinkRequestSchema
+from rustici_software_cloud_v2.models.launch_auth_schema import LaunchAuthSchema
 
 from nti.scorm_cloud.client.mixins import WithRepr
 from nti.scorm_cloud.client.mixins import NodeMixin
@@ -139,7 +140,8 @@ class RegistrationService(object):
     get_registration_result = getRegistrationResult
 
     def launch(self, regid, redirecturl, cssUrl=None, courseTags=None,
-               learnerTags=None, registrationTags=None, disableTracking=False, culture=None):
+               learnerTags=None, registrationTags=None, disableTracking=False, culture=None,
+               launchAuthType='vault', launchAuth=None):
         """
         Determine the launch url that can be used by the user agent to launch the provided
         registration.
@@ -149,6 +151,9 @@ class RegistrationService(object):
 
         https://cloud.scorm.com/docs/v2/reference/migration_guide/
         """
+        if launchAuth is None:
+            launchAuth = LaunchAuthSchema(type=launchAuthType)
+        
         v2regservice = SCV2RegistrationApi(api_client=self.service.make_v2_api())
         launch_link_request = LaunchLinkRequestSchema(
             redirect_on_exit_url=redirecturl,
@@ -158,6 +163,7 @@ class RegistrationService(object):
             learner_tags=learnerTags,
             course_tags=courseTags,
             registration_tags=registrationTags,
+            launch_auth=launchAuth
         )
         # TODO catch ApiError, and reraise as nti.scorm_cloud.request.ScormCloudError?
         result = v2regservice.build_registration_launch_link(regid, launch_link_request)
