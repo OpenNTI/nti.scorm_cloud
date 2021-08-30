@@ -18,6 +18,10 @@ except ImportError:  # pragma: no cover
     from urllib.request import urlopen
 from zope import interface
 
+from rustici_software_cloud_v2.configuration import Configuration as SCV2Configuration
+from rustici_software_cloud_v2.api_client import ApiClient as SCV2ApiClient
+
+
 from nti.scorm_cloud.client.config import Configuration
 
 from nti.scorm_cloud.client.course import CourseService
@@ -56,6 +60,9 @@ class ScormCloudService(object):
 
     def __init__(self, configuration):
         self.config = configuration
+        self.v2config = SCV2Configuration()
+        self.v2config.username = self.config.appid
+        self.v2config.password = self.config.secret
         self.__handler_cache = {}
 
     @classmethod
@@ -87,6 +94,11 @@ class ScormCloudService(object):
             API/Python client library
         """
         return cls(Configuration(appid, secret, serviceurl, origin))
+
+    def make_v2_api(self):
+        # TODO should this be Lazy, or CachedProperty?
+        # it wraps a ConnectionPool which could be useful to share
+        return SCV2ApiClient(configuration=self.v2config)
 
     def get_tag_service(self):
         return TagService(self)
