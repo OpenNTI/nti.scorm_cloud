@@ -62,7 +62,7 @@ setup(
         'zope.interface',
         'zope.schema',
         'zope.security',
-        'rustici_software_cloud_v2==1.0.2'
+        'rustici-software-cloud-v2==1.0.2'
     ],
     extras_require={
         'test': TESTS_REQUIRE,
