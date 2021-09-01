@@ -13,8 +13,10 @@ import uuid
 from zope import interface
 
 from rustici_software_cloud_v2.api.registration_api import RegistrationApi as SCV2RegistrationApi
-from rustici_software_cloud_v2.models.launch_link_request_schema import LaunchLinkRequestSchema
+
 from rustici_software_cloud_v2.models.launch_auth_schema import LaunchAuthSchema
+
+from rustici_software_cloud_v2.models.launch_link_request_schema import LaunchLinkRequestSchema
 
 from nti.scorm_cloud.client.mixins import WithRepr
 from nti.scorm_cloud.client.mixins import NodeMixin
@@ -155,6 +157,7 @@ class RegistrationService(object):
             launchAuth = LaunchAuthSchema(type=launchAuthType)
         
         v2regservice = SCV2RegistrationApi(api_client=self.service.make_v2_api())
+        redirecturl = '%s?regid=%s' % (redirecturl, regid)
         launch_link_request = LaunchLinkRequestSchema(
             redirect_on_exit_url=redirecturl,
             tracking=not disableTracking,
