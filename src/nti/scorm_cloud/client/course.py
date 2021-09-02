@@ -14,10 +14,13 @@ from rustici_software_cloud_v2.models.launch_auth_schema import LaunchAuthSchema
 
 from rustici_software_cloud_v2.models.launch_link_request_schema import LaunchLinkRequestSchema
 
+from rustici_software_cloud_v2.rest import ApiException
+
 from zope import interface
 
 from nti.common.string import is_true
 
+from nti.scorm_cloud.client.request import ScormCloudError
 from nti.scorm_cloud.client.request import ScormUpdateError
 
 from nti.scorm_cloud.client.mixins import get_source
@@ -174,9 +177,12 @@ class CourseService(object):
         launch_link_request = LaunchLinkRequestSchema(redirect_on_exit_url=redirecturl,
                                                       css_url=stylesheeturl,
                                                       launch_auth=launchAuth)
-        # TODO catch ApiError, and reraise as nti.scorm_cloud.request.ScormCloudError?
-        result = v2_course_api.build_course_preview_launch_link(courseid, 
-                                                                launch_link_request)
+        try:
+            result = v2_course_api.build_course_preview_launch_link(courseid, 
+                                                                    launch_link_request)
+        except ApiException as exc:
+            logger.exception("Error while getting scorm preview url")
+            raise ScormCloudError('Cannot get scorm preview url')
         logger.info('Scorm preview link: %s', result.launch_link)
         return result.launch_link
 

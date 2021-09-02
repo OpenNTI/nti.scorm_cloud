@@ -18,6 +18,8 @@ from rustici_software_cloud_v2.models.launch_auth_schema import LaunchAuthSchema
 
 from rustici_software_cloud_v2.models.launch_link_request_schema import LaunchLinkRequestSchema
 
+from rustici_software_cloud_v2.rest import ApiException
+
 from nti.scorm_cloud.client.mixins import WithRepr
 from nti.scorm_cloud.client.mixins import NodeMixin
 from nti.scorm_cloud.client.mixins import RegistrationMixin
@@ -168,8 +170,12 @@ class RegistrationService(object):
             registration_tags=registrationTags,
             launch_auth=launchAuth
         )
-        # TODO catch ApiError, and reraise as nti.scorm_cloud.request.ScormCloudError?
-        result = v2regservice.build_registration_launch_link(regid, launch_link_request)
+        try:
+            result = v2regservice.build_registration_launch_link(regid, 
+                                                                 launch_link_request)
+        except ApiException as exc:
+            logger.exception("Error while getting scorm launch url")
+            raise ScormCloudError('Cannot get scorm launch url')
         return result.launch_link
     get_launch_url = getLaunchURL = launch
 
