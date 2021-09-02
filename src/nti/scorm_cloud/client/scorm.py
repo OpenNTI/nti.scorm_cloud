@@ -8,6 +8,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from rustici_software_cloud_v2.configuration import Configuration as SCV2Configuration
+from rustici_software_cloud_v2.api_client import ApiClient as SCV2ApiClient
+
 from zope import interface
 
 from nti.scorm_cloud.client import CourseService
@@ -35,6 +38,9 @@ class ScormCloudService(object):
 
     def __init__(self, configuration):
         self.config = configuration
+        self.v2config = SCV2Configuration()
+        self.v2config.username = self.config.appid
+        self.v2config.password = self.config.secret
         self.__handler_cache = {}
 
     @classmethod
@@ -67,11 +73,16 @@ class ScormCloudService(object):
         """
         return cls(Configuration(appid, secret, serviceurl, origin))
 
-    def get_course_service(self):
-        return CourseService(self)
+    def make_v2_api(self):
+        # TODO should this be Lazy, or CachedProperty?
+        # it wraps a ConnectionPool which could be useful to share
+        return SCV2ApiClient(configuration=self.v2config)
 
     def get_tag_service(self):
         return TagService(self)
+
+    def get_course_service(self):
+        return CourseService(self)
 
     def get_debug_service(self):
         return DebugService(self)
@@ -100,3 +111,4 @@ class ScormCloudService(object):
         parameters).
         """
         return self.request().call_service(method)
+    

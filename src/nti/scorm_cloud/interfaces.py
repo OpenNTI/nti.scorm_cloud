@@ -837,3 +837,8 @@ class IUnmarshalled(interface.Interface):
         :param node: Minodom node
         :return: A new instance of the implementer object
         """
+
+class ILaunchLink(interface.Interface):
+
+    launch_link = TextLine(title=u"The launch link for the user agent",
+                           required=True)

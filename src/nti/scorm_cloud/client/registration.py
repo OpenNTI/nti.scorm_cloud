@@ -12,6 +12,14 @@ import uuid
 
 from zope import interface
 
+from rustici_software_cloud_v2.api.registration_api import RegistrationApi as SCV2RegistrationApi
+
+from rustici_software_cloud_v2.models.launch_auth_schema import LaunchAuthSchema
+
+from rustici_software_cloud_v2.models.launch_link_request_schema import LaunchLinkRequestSchema
+
+from rustici_software_cloud_v2.rest import ApiException
+
 from nti.scorm_cloud.client.mixins import WithRepr
 from nti.scorm_cloud.client.mixins import NodeMixin
 from nti.scorm_cloud.client.mixins import RegistrationMixin
@@ -136,25 +144,39 @@ class RegistrationService(object):
     get_registration_result = getRegistrationResult
 
     def launch(self, regid, redirecturl, cssUrl=None, courseTags=None,
-               learnerTags=None, registrationTags=None, disableTracking=False, culture=None):
-        request = self.service.request()
-        request.parameters['regid'] = regid
-        request.parameters['appid'] = self.service.config.appid
-        request.parameters['redirecturl'] = redirecturl + '?regid=' + regid
-        if cssUrl:
-            request.parameters['cssurl'] = cssUrl
-        if courseTags:
-            request.parameters['coursetags'] = courseTags
-        if learnerTags:
-            request.parameters['learnertags'] = learnerTags
-        if registrationTags:
-            request.parameters['registrationTags'] = registrationTags
-        if disableTracking:
-            request.parameters['disableTracking'] = str(disableTracking).lower()
-        if culture:
-            request.parameters['culture'] = culture
-        url = request.construct_url('rustici.registration.launch')
-        return url
+               learnerTags=None, registrationTags=None, disableTracking=False, culture=None,
+               launchAuthType='vault', launchAuth=None):
+        """
+        Determine the launch url that can be used by the user agent to launch the provided
+        registration.
+
+        This has been migrated to the v2 api, notice some of the kwargs are translated
+        based on the migration guide.
+
+        https://cloud.scorm.com/docs/v2/reference/migration_guide/
+        """
+        if launchAuth is None:
+            launchAuth = LaunchAuthSchema(type=launchAuthType)
+        
+        v2regservice = SCV2RegistrationApi(api_client=self.service.make_v2_api())
+        redirecturl = '%s?regid=%s' % (redirecturl, regid)
+        launch_link_request = LaunchLinkRequestSchema(
+            redirect_on_exit_url=redirecturl,
+            tracking=not disableTracking,
+            culture=culture,
+            css_url=cssUrl,
+            learner_tags=learnerTags,
+            course_tags=courseTags,
+            registration_tags=registrationTags,
+            launch_auth=launchAuth
+        )
+        try:
+            result = v2regservice.build_registration_launch_link(regid, 
+                                                                 launch_link_request)
+        except ApiException as exc:
+            logger.exception("Error while getting scorm launch url")
+            raise ScormCloudError('Cannot get scorm launch url')
+        return result.launch_link
     get_launch_url = getLaunchURL = launch
 
     def getLaunchHistory(self, regid):

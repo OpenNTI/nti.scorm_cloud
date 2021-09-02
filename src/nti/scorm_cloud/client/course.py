@@ -8,10 +8,19 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from rustici_software_cloud_v2.api.course_api import CourseApi as SCV2CourseApi
+
+from rustici_software_cloud_v2.models.launch_auth_schema import LaunchAuthSchema
+
+from rustici_software_cloud_v2.models.launch_link_request_schema import LaunchLinkRequestSchema
+
+from rustici_software_cloud_v2.rest import ApiException
+
 from zope import interface
 
 from nti.common.string import is_true
 
+from nti.scorm_cloud.client.request import ScormCloudError
 from nti.scorm_cloud.client.request import ScormUpdateError
 
 from nti.scorm_cloud.client.mixins import get_source
@@ -151,15 +160,31 @@ class CourseService(object):
         courses = CourseData.list_from_result(result)
         return courses
 
-    def get_preview_url(self, courseid, redirecturl, stylesheeturl=None):
-        request = self.service.request()
-        request.parameters['courseid'] = courseid
-        request.parameters['redirecturl'] = redirecturl
-        if stylesheeturl:
-            request.parameters['stylesheet'] = stylesheeturl
-        url = request.construct_url('rustici.course.preview')
-        logger.info('preview link: ' + url)
-        return url
+    def get_preview_url(self, courseid, redirecturl, stylesheeturl=None,
+                        launchAuthType='vault', launchAuth=None):
+        """
+        Generate the launch url that can be used by the user to preview the provided
+        registration.
+
+        This has been migrated to the v2 api, notice some of the kwargs are translated
+        based on the migration guide.
+
+        https://cloud.scorm.com/docs/v2/reference/migration_guide/
+        """
+        if launchAuth is None:
+            launchAuth = LaunchAuthSchema(type=launchAuthType)
+        v2_course_api = SCV2CourseApi(api_client=self.service.make_v2_api())
+        launch_link_request = LaunchLinkRequestSchema(redirect_on_exit_url=redirecturl,
+                                                      css_url=stylesheeturl,
+                                                      launch_auth=launchAuth)
+        try:
+            result = v2_course_api.build_course_preview_launch_link(courseid, 
+                                                                    launch_link_request)
+        except ApiException as exc:
+            logger.exception("Error while getting scorm preview url")
+            raise ScormCloudError('Cannot get scorm preview url')
+        logger.info('Scorm preview link: %s', result.launch_link)
+        return result.launch_link
 
     def get_metadata(self, courseid):
         request = self.service.request()

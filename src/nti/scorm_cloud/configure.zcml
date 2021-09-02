@@ -6,6 +6,10 @@
     <include package="zope.component" file="meta.zcml" />
     <include package="zope.security" file="meta.zcml" />
     <include package="zope.component" />
-	<include package="zope.security" />
+    <include package="zope.security" />
+
+    <class class="rustici_software_cloud_v2.models.LaunchLinkSchema">
+      <implements interface=".interfaces.ILaunchLink" />
+    </class>
 	 
 </configure>
