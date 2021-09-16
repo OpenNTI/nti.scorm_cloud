@@ -10,6 +10,8 @@ from __future__ import absolute_import
 
 import uuid
 
+from six.moves import urllib_parse
+
 from zope import interface
 
 from rustici_software_cloud_v2.api.registration_api import RegistrationApi as SCV2RegistrationApi
@@ -38,6 +40,14 @@ from nti.scorm_cloud.minidom import getAttributeValue
 from nti.scorm_cloud.minidom import getChildTextOrCDATA
 
 logger = __import__('logging').getLogger(__name__)
+
+
+def _set_regid_on_redirecturl(redirect_url, regid):
+    url_parts = list(urllib_parse.urlparse(redirect_url))
+    query = dict(urllib_parse.parse_qsl(url_parts[4]))
+    query.update({"regid": str(regid)})
+    url_parts[4] = urllib_parse.urlencode(query)
+    return urllib_parse.urlunparse(url_parts)
 
 
 @interface.implementer(IRegistrationService)
@@ -159,7 +169,8 @@ class RegistrationService(object):
             launchAuth = LaunchAuthSchema(type=launchAuthType)
         
         v2regservice = SCV2RegistrationApi(api_client=self.service.make_v2_api())
-        redirecturl = '%s?regid=%s' % (redirecturl, regid)
+        redirecturl =  _set_regid_on_redirecturl(redirecturl, regid)
+
         launch_link_request = LaunchLinkRequestSchema(
             redirect_on_exit_url=redirecturl,
             tracking=not disableTracking,
