@@ -25,6 +25,7 @@ from nti.scorm_cloud.client.scorm import ScormCloudService
 
 from nti.scorm_cloud.tests import fake_response
 from nti.scorm_cloud.tests import SharedConfiguringTestLayer
+from nti.scorm_cloud.client.registration import _set_regid_on_redirecturl
 
 
 class TestRegistrationService(unittest.TestCase):
@@ -123,6 +124,15 @@ class TestRegistrationService(unittest.TestCase):
         service = ScormCloudService.withargs("appid", "secret",
                                              "http://cloud.scorm.com/api")
         reg = service.get_registration_service()
+        
+        regid = '123456'
+        url = 'https://localhost/scorm'
+        result = _set_regid_on_redirecturl(url, regid)
+        assert_that(result, is_('https://localhost/scorm?regid=123456'))
+        
+        result = _set_regid_on_redirecturl(result, regid)
+        assert_that(result, is_('https://localhost/scorm?regid=123456'))
+        
         # url = reg.launch("regid", "http://www.myapp.com",
         #                  "http://www.myapp.com/css.css",
         #                  "mycourse", 'mylearner', 'myreg', True, 'en')
